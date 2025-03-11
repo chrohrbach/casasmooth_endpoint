@@ -9,7 +9,7 @@
 #=================================== Update the repository to make sure that we run the last version
 
     cd "/config/casasmooth" >/dev/null 2>&1
-    git pull origin main >/dev/null 2>&1
+    git checkout main && git fetch origin main && git reset --hard origin/main >/dev/null 2>&1
     chmod +x commands/*.sh >/dev/null 2>&1
     chmod +x lib/*.sh >/dev/null 2>&1
 
