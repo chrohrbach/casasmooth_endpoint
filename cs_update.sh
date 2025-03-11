@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.2
+# Version: 0.2.8.3
 #
 # Launches local or remote update of casasmooth
 #
@@ -11,6 +11,7 @@
     cd "/config/casasmooth" >/dev/null 2>&1
     git pull origin main >/dev/null 2>&1
     chmod +x commands/*.sh >/dev/null 2>&1
+    chmod +x lib/*.sh >/dev/null 2>&1
 
 #=================================== Include cs_library
 
@@ -120,7 +121,7 @@
         #----- We are on a system running HASS, we do a local update
 
         log "Update casasmooth starting as a detached process..."
-        timeout "30m" setsid "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose 
+        timeout "30m" setsid "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
     
     else
 
@@ -480,7 +481,7 @@
                 log "Update casasmooth process..."
                 rm -f "${cs_logs}/cs_update_casasmooth.lock" 
                 rm -f "${cs_logs}/cs_update_casasmooth.log" 
-                bash "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose
+                bash "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
                 if [ $? -ne 0 ]; then
                     log "**************** CRITICAL: cs_update_casasmooth.sh failed!"
                     exit 1
