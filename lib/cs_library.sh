@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.3
+# Version: 1.1.17.4
 #
 # Library function for casasmooth scripts
 #
@@ -316,34 +316,32 @@
         local files=("$@")
         local newest_timestamp=0 # Initialize to epoch time (or earlier if needed)
         local early_timestamp=$(date -d "1970-01-01" +%s) # Get epoch timestamp
-
         newest_timestamp=$early_timestamp # Default to early timestamp if no file exists
-
         for file in "${files[@]}"; do
             if [ -f "$file" ]; then
-            file_timestamp=$(stat -c %Y "$file" 2>/dev/null) # Get modification timestamp in seconds since epoch
-            if [ -n "$file_timestamp" ]; then # Check if stat returned a valid timestamp
-                if [ "$file_timestamp" -gt "$newest_timestamp" ]; then
-                    newest_timestamp=$file_timestamp
+                file_timestamp=$(stat -c %Y "$file" 2>/dev/null) # Get modification timestamp in seconds since epoch
+                if [ -n "$file_timestamp" ]; then # Check if stat returned a valid timestamp
+                    if [ "$file_timestamp" -gt "$newest_timestamp" ]; then
+                        newest_timestamp=$file_timestamp
+                    fi
                 fi
-            fi
             fi
         done
         echo "$newest_timestamp"
     }
 
     lib_update_required() {
-        local hass_timestamp=$(lib_get_newest_timestamp "${hass_path}/core.config" "${hass_path}/core.area_registry" "${hass_path}/core.device_registry" "${hass_path}/core.entity_registry" )
+        local json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.config" "${hass_path}/.storage/core.area_registry" "${hass_path}/.storage/core.device_registry" "${hass_path}/.storage/core.entity_registry" )
         local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" "${cs_locals}/prod/cs_automation.yaml")
-        local update_timestamp=$(lib_get_newest_timestamp "${cs_commands}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
-        if [[ "$hass_timestamp" -ge "$yaml_timestamp" ]]; then
+        local sh_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
+        if [[ "$json_timestamp" -ge "$yaml_timestamp" ]]; then
+            echo "true"
+        elif [[ "$sh_timestamp" -ge "$json_timestamp" ]]; then
+            echo "true"
+        elif [[ "$sh_timestamp" -ge "$yaml_timestamp" ]]; then
             echo "true"
         else
-            if [[ "$update_timestamp" -ge "$yaml_timestamp" ]]; then
-                echo "true"
-            else
-                echo "false"
-            fi
+            echo "false"
         fi
     }   
 
