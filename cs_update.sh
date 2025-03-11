@@ -191,7 +191,7 @@
             #----- Collect required files
 
                 # Create data file
-                tar -czf "${cs_temp}/${data_file}" "/config/.storage" "/config/configuration.yaml" "/config/casasmooth/locals" "/config/casasmooth/cache" 
+                tar -czf "${cs_temp}/${data_file}" "/config/.storage" "/config/configuration.yaml" "/config/casasmooth/locals" "/config/casasmooth/cache"  2>/dev/null
                 if [ ! -f "${cs_temp}/${data_file}" ]; then
                     log "tar.gz file was not created at ${data_file}"
                     exit 1
@@ -372,7 +372,7 @@
                 if [[ "$production" == "true" ]]; then
                     log "Installing results"
                     log_debug "Decompressing ${cs_temp}/${result_file}..."
-                    tar -xzf "${cs_temp}/${result_file}" -C / || log "Failed to extract data file"
+                    tar -xzf "${cs_temp}/${result_file}" -C / 2>/dev/null
                     rm -f "${cs_temp}/${result_file}"
                     log_debug "Local file ${cs_temp}/${result_file} has been removed."
                 fi
@@ -472,7 +472,7 @@
             #----- Extract the data tar file
 
                 log "Extracting the data file..."
-                tar -xzf "${cs_temp}/${data_file}" -C / || log "Failed to extract data file"
+                tar -xzf "${cs_temp}/${data_file}" -C / 2>/dev/null
                 rm -f "${cs_temp}/${data_file}"
 
             #----- Do the update with the update data
@@ -524,7 +524,7 @@
 
                 add_to_tarlist "/config/www/cs_update_casasmooth.txt"
 
-                tar -czf "${cs_temp}/${result_file}" -T "$tarlist"
+                tar -czf "${cs_temp}/${result_file}" -T "$tarlist" 2>/dev/null
 
             #----- Send the result file to the storage account
 
