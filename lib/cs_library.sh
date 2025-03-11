@@ -334,13 +334,16 @@
 
     lib_update_required() {
         local hass_timestamp=$(lib_get_newest_timestamp "${hass_path}/core.config" "${hass_path}/core.area_registry" "${hass_path}/core.device_registry" "${hass_path}/core.entity_registry" )
-        local cs_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" "${cs_commands}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
-        log_debug "Hass timestamp: $hass_timestamp"
-        log_debug "CS timestamp: $cs_timestamp"
-        if [[ "$hass_timestamp" -ge "$cs_timestamp" ]]; then
+        local dash_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" )
+        local update_timestamp=$(lib_get_newest_timestamp "${cs_commands}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
+        if [[ "$hass_timestamp" -ge "$dash_timestamp" ]]; then
             echo "true"
         else
-            echo "false"
+            if [[ "$update_timestamp" -ge "$dash_timestamp" ]]; then
+                echo "true"
+            else
+                echo "false"
+            fi
         fi
     }   
 
