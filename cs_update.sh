@@ -11,7 +11,6 @@
     cd "/config/casasmooth" >/dev/null 2>&1
     git checkout main && git fetch origin main && git reset --hard origin/main >/dev/null 2>&1
     chmod +x commands/*.sh >/dev/null 2>&1
-    chmod +x lib/*.sh >/dev/null 2>&1
 
 #=================================== Include cs_library
 
@@ -112,8 +111,6 @@
         ha_present=true
     fi
 
-    # The logic above garantees that we dont change the existing logic.
-
 #----- Update process
 
     if [[ "$remote_update" == "false" ]]; then
@@ -121,7 +118,7 @@
         #----- We are on a system running HASS, we do a local update
 
         log "Update casasmooth starting as a detached process..."
-        timeout "30m" setsid "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
+        timeout "30m" setsid bash "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
     
     else
 
@@ -170,7 +167,7 @@
             #----- We are on a system running HASS
 
                 if [[ "$(lib_update_required)" == "false" ]]; then
-                    log "casasmooth update has not been determined to be required."
+                    log "casasmooth update is not required."
                     exit 0
                 fi
 

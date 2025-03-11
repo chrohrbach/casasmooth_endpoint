@@ -334,14 +334,16 @@
         local json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.config" "${hass_path}/.storage/core.area_registry" "${hass_path}/.storage/core.device_registry" "${hass_path}/.storage/core.entity_registry" )
         local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" )
         local sh_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
-        if [[ "$json_timestamp" -ge "$yaml_timestamp" ]]; then
-            echo "true"
-        elif [[ "$sh_timestamp" -ge "$json_timestamp" ]]; then
+        if [[ "$json_timestamp" -ge "$yaml_timestamp" || "$json_timestamp" -ge "$sh_timestamp" ]]; then
             echo "true"
         elif [[ "$sh_timestamp" -ge "$yaml_timestamp" ]]; then
             echo "true"
         else
-            echo "false"
+            if [ -f "${cs_locals}/prod/cs_automation.yaml" ]; then
+                echo "false"
+            else
+                echo "true"
+            fi  
         fi
     }   
 
