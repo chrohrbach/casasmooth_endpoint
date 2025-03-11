@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.1
+# Version: 0.2.8.2
 #
 # Launches local or remote update of casasmooth
 #
@@ -120,7 +120,7 @@
         #----- We are on a system running HASS, we do a local update
 
         log "Update casasmooth starting as a detached process..."
-        timeout "30m" setsid "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
+        timeout "30m" setsid "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose 
     
     else
 
