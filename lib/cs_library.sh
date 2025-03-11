@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.4
+# Version: 1.1.17.5
 #
 # Library function for casasmooth scripts
 #
@@ -332,7 +332,7 @@
 
     lib_update_required() {
         local json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.config" "${hass_path}/.storage/core.area_registry" "${hass_path}/.storage/core.device_registry" "${hass_path}/.storage/core.entity_registry" )
-        local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" "${cs_locals}/prod/cs_automation.yaml")
+        local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" )
         local sh_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
         if [[ "$json_timestamp" -ge "$yaml_timestamp" ]]; then
             echo "true"
