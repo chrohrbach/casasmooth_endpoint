@@ -1,0 +1,169 @@
+#!/bin/bash
+#
+# casasmooth - copyright by teleia 2024
+#
+# Version: 1.2.5
+#
+# Optimized Backup using Find & CP instead of Rsync, with Cloud Upload
+#
+#=================================== Include cs_library
+    include="/config/casasmooth/lib/cs_library.sh"
+    if ! source "${include}"; then
+        echo "ERROR: Failed to source ${include}"
+        exit 1
+    fi
+#===================================
+
+verbose=true
+
+log "IMPORTANT: Backup will only work if a correct plan is enabled for this GUID. Backend will reject the file otherwise."
+
+# If cs_path is not available, skip local backup logic
+if [[ -z "$cs_path" ]]; then
+    log "cs_path is empty. Skipping local backup steps entirely."
+    log "Backup terminated at $(date +"%d.%m.%Y %H:%M:%S")"
+    exit 0
+fi
+
+endpoint_url="$(extract_secret "file_backup_endpoint")"
+current_date_time=$(date +"%Y%m%d_%H%M%S")
+backup_folder="${cs_path}/backup"
+backup_dir="${backup_folder}/${current_date_time}"
+
+#----- Cleanup old backups (keep last 3)
+log "Cleaning up old backups in ${backup_folder}..."
+find "${backup_folder}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -nr | awk 'NR>3 {print $1}' | xargs -I {} rm -rf {} 2>/dev/null || true
+
+# Create backup directories
+mkdir -p "${backup_dir}" || log "Cannot create backup dir: ${backup_dir}"
+mkdir -p "${backup_dir}/config" || log "Cannot create backup dir: ${backup_dir}/config"
+mkdir -p "${backup_dir}/config/casasmooth" || log "Cannot create backup dir: ${backup_dir}/config/casasmooth"
+mkdir -p "${backup_dir}/config/.storage" || log "Cannot create backup dir: ${backup_dir}/config/.storage"
+
+log "Backup dir set to ${backup_dir}"
+
+#----- Manage function (for uploading)
+manage() {
+    # If no endpoint or no guid, skip upload
+    if [[ -z "$endpoint_url" || -z "$guid" ]]; then
+        log "Skipping upload — endpoint or guid not set."
+        return
+    fi
+
+    for file_path in "$@"; do
+        if [[ ! -f "$file_path" ]]; then
+            log "File not found: $file_path"
+            continue
+        fi
+
+        # --- NEW CHECK FOR LARGE .log FILES ---
+        if [[ "${file_path##*.}" == "log" ]]; then
+            # If file bigger than 20MB, skip
+            file_size=$(stat -c%s "$file_path" 2>/dev/null || echo 0)
+            if [[ $file_size -gt $((20 * 1024 * 1024)) ]]; then
+                log "Skipping large log file (over 20MB): $file_path"
+                continue
+            fi
+        fi
+        # ---------------------------------------
+
+        file_content=$(base64 "$file_path" | tr -d '\n') || {
+            log "Failed to encode file: $file_path"
+            continue
+        }
+        file_name=$(basename "$file_path")
+
+        json_payload=$(printf '{
+            "guid": "%s",
+            "file_name": "%s",
+            "file_content": "%s"
+        }' "$guid" "$file_name" "$file_content")
+
+        log "Sending $file_name to account $guid"
+
+        temp_file=$(mktemp) || {
+            log "Failed to create temporary file"
+            continue
+        }
+
+        echo "$json_payload" > "$temp_file"
+
+        # Attempt upload
+        response=$(curl --silent --write-out "%{http_code}" \
+            --header "Content-Type: application/json" \
+            --data @"$temp_file" \
+            "$endpoint_url")
+
+        http_code=$(echo "$response" | tail -n1)
+
+        if [[ "$http_code" -ne 202 ]]; then
+            log "Failed to upload $file_name. HTTP status code: $http_code"
+        fi
+
+        rm -f "$temp_file"
+    done
+}
+
+# Copy all files **excluding** backup, temp, and logs folders
+log "Copying all casasmooth relevant files"
+find "${cs_path}/" -type d \( \
+    -name ".*" -o \
+    -path "${cs_path}/.git" -o \
+    -path "${cs_path}/.gitattributes" -o \
+    -path "${cs_path}/.gitignore" -o \
+    -path "${cs_path}/.vscode" -o \
+    -path "${cs_path}/backup" -o \
+    -path "${cs_path}/resources" -o \
+    -path "${cs_path}/temp" -o \
+    -path "${cs_path}/logs" -o \
+    -path "${cs_path}/images" -o \
+    -path "${cs_path}/medias" \
+    \) -prune -o -type f \
+    -exec cp --parents {} "${backup_dir}" \; \
+    || log "Failed to copy files from ${cs_path} to ${backup_dir}"
+    
+#----- Copy YAML files from `$hass_path`
+log "Copying hass relevant files"
+find "${hass_path}/" -maxdepth 1 -type f \( -name "*.yaml" \) \
+    -exec cp --parents {} "${backup_dir}" \; \
+    || log "Failed to copy HASS YAML files"
+
+#----- Copy Log files from `$hass_path`
+log "Copying hass relevant files"
+find "${hass_path}/" -maxdepth 1 -type f \( -name "*.log" \) \
+    -exec cp --parents {} "${backup_dir}" \; \
+    || log "Failed to copy HASS log files"
+
+#----- Copy Home Assistant `.storage` registry files separately
+log "Copying hass registries"
+find "${hass_path}/.storage/" -type f \( -name "core.*" -o -name "person" -o -name "auth" -o -name "frontend*" -o -name "lovelace*"  -o -name "energy*" \) \
+    -exec cp --parents {} "${backup_dir}" \; \
+    || log "Failed to copy HASS registry files"
+
+#----- Copy Zigbee db files separately
+log "Copying zigbee db"
+find "${hass_path}/" -maxdepth 1 -type f \( -name "zigbee.db*" \) \
+    -exec cp --parents {} "${backup_dir}" \; \
+    || log "Failed to copy Zigbee registry files"
+
+#----- Backup isolated files
+log "Backup inventory files"
+manage "${cs_logs}/cs_inventory.csv"
+manage "${cs_logs}/cs_inventory.txt"
+manage "${cs_cache}/cs_registry_data.sh"
+
+#----- Create Tar Archive of Synced Files
+tar_filename="${guid}.tar.gz"
+log "Creating tar archive ${backup_dir}/${tar_filename}..."
+tar -czf "${backup_dir}/${tar_filename}" -C "${backup_dir}/config/" . || log "Failed to create tar file"
+
+#----- Upload Tar Archive to Cloud
+if [[ -f "${backup_dir}/${tar_filename}" ]]; then
+    log "Backup completed: ${tar_filename}, send to cloud"
+    manage "${backup_dir}/${tar_filename}"
+else
+    log "No tar file found at ${backup_dir}/${tar_filename}, skipping final upload."
+fi
+
+log "Backup terminated at $(date +"%d.%m.%Y %H:%M:%S")"
+exit 0
