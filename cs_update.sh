@@ -101,7 +101,7 @@
     #----- Initial test to determine if we need a remote update or not. 
 
     remote_update=$remoting
-    if [[ ! -f "${cs_commands}/cs_update_casasmooth.sh" ]]; then
+    if [[ ! -f "${cs_lib}/cs_update_casasmooth.sh" ]]; then
         # No local cs_update_casasmooth found !!!
         remote_update=true
     fi
@@ -120,7 +120,7 @@
         #----- We are on a system running HASS, we do a local update
 
         log "Update casasmooth starting as a detached process..."
-        timeout "30m" setsid "${cs_commands}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
+        timeout "30m" setsid "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
     
     else
 
@@ -478,9 +478,9 @@
             #----- Do the update with the update data
 
                 log "Update casasmooth process..."
-                rm -f "${cs_commands}/cs_update_casasmooth.lock" 
-                rm -f "${cs_commands}/cs_update_casasmooth.log" 
-                bash "${cs_commands}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose
+                rm -f "${cs_logs}/cs_update_casasmooth.lock" 
+                rm -f "${cs_logs}/cs_update_casasmooth.log" 
+                bash "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose
                 if [ $? -ne 0 ]; then
                     log "**************** CRITICAL: cs_update_casasmooth.sh failed!"
                     exit 1
@@ -514,7 +514,7 @@
                 add_to_tarlist "/config/casasmooth/lib/cs_library.sh"
                 add_to_tarlist "/config/casasmooth/lib/.cs_secrets.yaml"
 
-                find /config/casasmooth/commands -type f ! -name 'cs_update_casasmooth.sh' -print0 | while IFS= read -r -d $'\0' file; do
+                find /config/casasmooth/commands -type f -print0 | while IFS= read -r -d $'\0' file; do
                     add_to_tarlist "$file"
                 done
 
