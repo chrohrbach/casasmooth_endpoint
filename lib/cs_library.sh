@@ -340,7 +340,7 @@
             echo "true"
         else
             if [ -f "${cs_locals}/prod/cs_automation.yaml" ]; then
-                echo "false"
+                echo "true"
             else
                 echo "true"
             fi  
