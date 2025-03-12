@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.3.5
+# Version: 0.2.8.3.6
 #
 # Launches local or remote update of casasmooth
 #
@@ -299,17 +299,32 @@
                 secs=5
                 attempt=0
                 while [ $attempt -lt $max_attempts ]; do
-                    http_status=$(curl -s -o /dev/null -w "%{http_code}" -I "${BLOB_SERVICE}/update/${result_file}?${STORAGE_SAS_TOKEN}")
+                    attempt=$((attempt+1))
+                    log_debug "Attempt ${attempt}/${max_attempts}: Polling..."
+
+                    blob_url="${BLOB_SERVICE}/update/${result_file}?${STORAGE_SAS_TOKEN}"
+                    log_debug "Checking URL: ${blob_url}" # Log the full URL
+
+                    http_status=$(curl -s -o /dev/null -w "%{http_code}" -I "${blob_url}")
+                    log_debug "Attempt ${attempt}/${max_attempts}: HTTP Status: ${http_status}" # Log HTTP status code
+
                     if [ "$http_status" -eq "200" ]; then
                         log_debug "Blob file found (HTTP 200)."
                         found=true
                         break
                     else
-                        log_debug "Attempt $((attempt+1))/$max_attempts: Blob not found (HTTP ${http_status}), waiting $secs seconds..."
+                        log_debug "Attempt ${attempt}/${max_attempts}: Blob not found (HTTP ${http_status}), waiting ${secs} seconds..."
                         sleep $secs
-                        attempt=$((attempt+1))
                     fi
                 done
+
+                if $found; then
+                    log "Result blob '${result_file}' found after ${attempt} attempts."
+                    # Proceed with further processing knowing the blob exists
+                else
+                    log "Result blob '${result_file}' not found after ${max_attempts} attempts. Timeout."
+                    # Handle the case where the blob is not found (e.g., error, retry, etc.)
+                fi
 
             #----- Delete the data file from blob storage
 
