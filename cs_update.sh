@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.3.4
+# Version: 0.2.8.3.5
 #
 # Launches local or remote update of casasmooth
 #
@@ -194,7 +194,7 @@
             #----- Collect required files
 
                 # Create data file
-                tar -czf "${cs_temp}/${data_file}" "/config/.storage" "/config/configuration.yaml" "/config/casasmooth/locals" "/config/casasmooth/cache" 
+                tar -czf "${cs_temp}/${data_file}" "/config/.storage" "/config/configuration.yaml" "/config/secrets.yaml" "/config/casasmooth/locals" "/config/casasmooth/cache" 
                 if [ ! -f "${cs_temp}/${data_file}" ]; then
                     log "tar.gz file was not created at ${data_file}"
                     exit 1
@@ -419,7 +419,7 @@
             #----- Restart
 
                 if [[ "$production" == "true" ]]; then
-                    if [ "$lib_need_restart" -eq 1 ]; then
+                    if [ "$(lib_need_restart)" -eq 1 ]; then
                         log "Restarting core..."
                         ha core restart
                     fi
