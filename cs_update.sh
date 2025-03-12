@@ -175,7 +175,7 @@
             #----- Collect required files
 
                 # Create data file
-                tar -czf "${cs_temp}/${data_file}" "/config/.storage" "/config/configuration.yaml" "/config/secrets.yaml" "/config/casasmooth/locals" "/config/casasmooth/cache" 
+                tar -czf "${cs_temp}/${data_file}" "/config/.storage" "/config/configuration.yaml" "/config/secrets.yaml" "/config/casasmooth/locals" "/config/casasmooth/cache" > /dev/null 2>&1
                 if [ ! -f "${cs_temp}/${data_file}" ]; then
                     log "tar.gz file was not created at ${data_file}"
                     exit 1
@@ -406,7 +406,7 @@
                 if [[ "$production" == "true" ]]; then
                     log "Installing results"
                     log_debug "Decompressing ${cs_temp}/${result_file}..."
-                    tar -xzf "${cs_temp}/${result_file}" -C / 
+                    tar -xzf "${cs_temp}/${result_file}" -C / > /dev/null 2>&1
                     rm -f "${cs_temp}/${result_file}"
                     log_debug "Local file ${cs_temp}/${result_file} has been removed."
                 fi
@@ -435,7 +435,7 @@
             #----- Restart
 
                 if [[ "$production" == "true" ]]; then
-                    if [ "$(lib_need_restart)" -eq 1 ]; then
+                    if [[ "$(lib_need_restart)" == "true" ]]; then
                         log "Restarting core..."
                         ha core restart
                     fi
@@ -494,7 +494,7 @@
             #----- Extract the data tar file
 
                 log "Extracting the data file..."
-                tar -xzf "${cs_temp}/${data_file}" -C / 
+                tar -xzf "${cs_temp}/${data_file}" -C / > /dev/null 2>&1
                 rm -f "${cs_temp}/${data_file}"
 
             #----- Do the update with the update data
@@ -546,7 +546,7 @@
 
                 add_to_tarlist "/config/www/cs_update_casasmooth.txt"
 
-                tar -czf "${cs_temp}/${result_file}" -T "$tarlist" 
+                tar -czf "${cs_temp}/${result_file}" -T "$tarlist" > /dev/null 2>&1
 
             #----- Send the result file to the storage account
 
