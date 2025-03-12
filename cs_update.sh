@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.3
+# Version: 0.2.8.3.1
 #
 # Launches local or remote update of casasmooth
 #
@@ -117,8 +117,13 @@
 
         #----- We are on a system running HASS, we do a local update
 
-        log "Update casasmooth starting as a detached process..."
-        timeout "30m" setsid bash "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
+        if [[ "$(lib_update_required)" == "false" ]]; then
+            log "casasmooth update is not required."
+            exit 0
+        else
+            log "Update casasmooth starting as a detached process..."
+            timeout "30m" setsid bash "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
+        fi
     
     else
 
