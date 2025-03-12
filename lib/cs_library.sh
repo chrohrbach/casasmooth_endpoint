@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.6
+# Version: 1.1.17.7
 #
 # Library function for casasmooth scripts
 #
@@ -352,7 +352,7 @@
 #----- Final cleanup and processing
     lib_need_restart() {
 
-        local need_restart=1
+        local need_restart="true"
 
         # Check if some key files are more recent than others and execute
         # a ha core restart if needed. First compare the folder ${cs_locals}/prod and ${cs_locals}/back
@@ -365,7 +365,7 @@
         # Verify that both directories exist
         if [ -d "$PROD_DIR" ] && [ -d "$BACK_DIR" ]; then
 
-            need_restart=0
+            need_restart="false"
 
             # Build a list of all files (relative to each directory) present in either folder.
             # This handles files that might exist in one directory and not the other.
@@ -380,7 +380,7 @@
                 # Check that the file exists in both directories.
                 if [ ! -f "$prod_file" ] || [ ! -f "$back_file" ]; then
                     log "Difference detected: $rel_path is missing in one of the directories."
-                    need_restart=1
+                    need_restart="true"
                     break
                 fi
 
@@ -390,7 +390,7 @@
 
                 if [ "$size_prod" -ne "$size_back" ]; then
                     log "Difference detected: $rel_path has size $size_prod (prod) vs $size_back (back)."
-                    need_restart=1
+                    need_restart="true"
                     break
                 fi
             done
