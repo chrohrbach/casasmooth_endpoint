@@ -335,15 +335,17 @@
         local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" )
         local sh_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
         if [[ "$json_timestamp" -ge "$yaml_timestamp" || "$json_timestamp" -ge "$sh_timestamp" ]]; then
+            log_debug "Update required: JSON: $json_timestamp, YAML: $yaml_timestamp, SH: $sh_timestamp"
+            echo "true"
+        elif [[ "$sh_timestamp" -ge "$json_timestamp" ]]; then
+            log_debug "Update required: JSON: $json_timestamp, YAML: $yaml_timestamp, SH: $sh_timestamp"
             echo "true"
         elif [[ "$sh_timestamp" -ge "$yaml_timestamp" ]]; then
+            log_debug "Update required: JSON: $json_timestamp, YAML: $yaml_timestamp, SH: $sh_timestamp"
             echo "true"
         else
-            if [ -f "${cs_locals}/prod/cs_automation.yaml" ]; then
-                echo "true"
-            else
-                echo "true"
-            fi  
+            log_debug "Update NOT required: JSON: $json_timestamp, YAML: $yaml_timestamp, SH: $sh_timestamp"
+            echo "false"
         fi
     }   
 
