@@ -363,41 +363,39 @@
         local BACK_DIR="${cs_locals}/back"
 
         # Verify that both directories exist
-        if [ ! -d "$PROD_DIR" ] || [ ! -d "$BACK_DIR" ]; then
-            log_debug "One of the directories does not exist: $PROD_DIR or $BACK_DIR"
-            echo $need_restart
-            return
+        if [ -d "$PROD_DIR" ] && [ -d "$BACK_DIR" ]; then
+
+            need_restart=0
+
+            # Build a list of all files (relative to each directory) present in either folder.
+            # This handles files that might exist in one directory and not the other.
+            local files=$( (cd "$PROD_DIR" && find . -type f) ; (cd "$BACK_DIR" && find . -type f) | sort | uniq )
+
+            for f in $files; do
+                # Remove the leading "./" if present to get the relative path
+                local rel_path="${f#./}"
+                local prod_file="$PROD_DIR/$rel_path"
+                local back_file="$BACK_DIR/$rel_path"
+
+                # Check that the file exists in both directories.
+                if [ ! -f "$prod_file" ] || [ ! -f "$back_file" ]; then
+                    log "Difference detected: $rel_path is missing in one of the directories."
+                    need_restart=1
+                    break
+                fi
+
+                # Compare file sizes using stat.
+                local size_prod=$(stat -c %s "$prod_file")
+                local size_back=$(stat -c %s "$back_file")
+
+                if [ "$size_prod" -ne "$size_back" ]; then
+                    log "Difference detected: $rel_path has size $size_prod (prod) vs $size_back (back)."
+                    need_restart=1
+                    break
+                fi
+            done
+
         fi
-
-        need_restart=0
-
-        # Build a list of all files (relative to each directory) present in either folder.
-        # This handles files that might exist in one directory and not the other.
-        local files=$( (cd "$PROD_DIR" && find . -type f) ; (cd "$BACK_DIR" && find . -type f) | sort | uniq )
-
-        for f in $files; do
-            # Remove the leading "./" if present to get the relative path
-            local rel_path="${f#./}"
-            local prod_file="$PROD_DIR/$rel_path"
-            local back_file="$BACK_DIR/$rel_path"
-
-            # Check that the file exists in both directories.
-            if [ ! -f "$prod_file" ] || [ ! -f "$back_file" ]; then
-                log "Difference detected: $rel_path is missing in one of the directories."
-                need_restart=1
-                break
-            fi
-
-            # Compare file sizes using stat.
-            local size_prod=$(stat -c %s "$prod_file")
-            local size_back=$(stat -c %s "$back_file")
-
-            if [ "$size_prod" -ne "$size_back" ]; then
-                log "Difference detected: $rel_path has size $size_prod (prod) vs $size_back (back)."
-                need_restart=1
-                break
-            fi
-        done
 
         echo $need_restart
 
