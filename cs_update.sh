@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.3.6
+# Version: 0.2.8.3.7
 #
 # Launches local or remote update of casasmooth
 #
@@ -146,24 +146,8 @@
             OAUTH_ENDPOINT=$(extract_secret "OAUTH_ENDPOINT")
             RESOURCE=$(extract_secret "RESOURCE")   
 
-            # Request token via client_credentials
-            # 'grant_type=client_credentials' + 'resource=...' + 'client_id=...' + 'client_secret=...'
-            token_response=$(curl -s -X POST \
-            -d "grant_type=client_credentials" \
-            -d "resource=${RESOURCE}" \
-            -d "client_id=${CLIENT_ID}" \
-            -d "client_secret=${CLIENT_SECRET}" \
-            "${OAUTH_ENDPOINT}")
-
-            # Extract access_token using jq, sed, or grep
-            # (Here we assume 'jq' is installed. If not, see alternative below.)
-            ACCESS_TOKEN=$(echo "$token_response" | jq -r '.access_token')
-
-            if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" = "null" ]; then
-            echo "Failed to obtain an access token. Response was:"
-            echo "$token_response"
-            exit 1
-            fi
+            data_file="dta_${guid}.tar.gz"
+            result_file="res_${guid}.tar.gz"
 
         #----- Check to see if this system is running on HASS
 
@@ -185,9 +169,6 @@
                     log "guid is required for remoting, exiting..."
                     exit 1
                 fi
-
-                data_file="${guid}.tar.gz"
-                result_file="result_${guid}.tar.gz"
 
                 log "Starting the upload process for remote updating"
 
@@ -229,7 +210,27 @@
                 fi
 
             #----- Create container group, the container will read the data file and process it
+
                 if [[ "$cloud" == "true" ]]; then
+
+                    # Request token via client_credentials
+                    # 'grant_type=client_credentials' + 'resource=...' + 'client_id=...' + 'client_secret=...'
+                    token_response=$(curl -s -X POST \
+                    -d "grant_type=client_credentials" \
+                    -d "resource=${RESOURCE}" \
+                    -d "client_id=${CLIENT_ID}" \
+                    -d "client_secret=${CLIENT_SECRET}" \
+                    "${OAUTH_ENDPOINT}")
+
+                    # Extract access_token using jq, sed, or grep
+                    # (Here we assume 'jq' is installed. If not, see alternative below.)
+                    ACCESS_TOKEN=$(echo "$token_response" | jq -r '.access_token')
+
+                    if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" = "null" ]; then
+                        echo "Failed to obtain an access token. Response was:"
+                        echo "$token_response"
+                        exit 1
+                    fi
 
                     log "Starting cloud processing"
                     log_debug "Creating container group '${guid}' in resource group '${AZURE_RESOURCE_GROUP}'..."
@@ -452,9 +453,6 @@
                 fi
 
                 guid="${guid_to_process}"
-
-                data_file="${guid}.tar.gz"
-                result_file="result_${guid}.tar.gz"
 
                 log "Starting the update process"
             
