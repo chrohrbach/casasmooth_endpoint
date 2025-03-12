@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.5
+# Version: 1.1.17.6
 #
 # Library function for casasmooth scripts
 #
@@ -348,4 +348,55 @@
             echo "false"
         fi
     }   
+
+#----- Final cleanup and processing
+    lib_need_restart() {
+
+        # Check if some key files are more recent than others and execute
+        # a ha core restart if needed. First compare the folder ${cs_locals}/prod and ${cs_locals}/back
+        # if one of the files have a different size, a restart is needed
+
+        local need_restart=0
+
+        # Define the directories
+        local PROD_DIR="${cs_locals}/prod"
+        local BACK_DIR="${cs_locals}/back"
+
+        # Verify that both directories exist
+        if [ ! -d "$PROD_DIR" ] || [ ! -d "$BACK_DIR" ]; then
+            echo "Error: One of the directories does not exist: $PROD_DIR or $BACK_DIR"
+            exit 1
+        fi
+
+        # Build a list of all files (relative to each directory) present in either folder.
+        # This handles files that might exist in one directory and not the other.
+        local files=$( (cd "$PROD_DIR" && find . -type f) ; (cd "$BACK_DIR" && find . -type f) | sort | uniq )
+
+        for f in $files; do
+            # Remove the leading "./" if present to get the relative path
+            local rel_path="${f#./}"
+            local prod_file="$PROD_DIR/$rel_path"
+            local back_file="$BACK_DIR/$rel_path"
+
+            # Check that the file exists in both directories.
+            if [ ! -f "$prod_file" ] || [ ! -f "$back_file" ]; then
+                log "Difference detected: $rel_path is missing in one of the directories."
+                need_restart=1
+                break
+            fi
+
+            # Compare file sizes using stat.
+            local size_prod=$(stat -c %s "$prod_file")
+            local size_back=$(stat -c %s "$back_file")
+
+            if [ "$size_prod" -ne "$size_back" ]; then
+                log "Difference detected: $rel_path has size $size_prod (prod) vs $size_back (back)."
+                need_restart=1
+                break
+            fi
+        done
+
+        echo $need_restart
+
+    }
 

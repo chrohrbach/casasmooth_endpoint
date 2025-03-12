@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.3.3
+# Version: 0.2.8.3.4
 #
 # Launches local or remote update of casasmooth
 #
@@ -330,6 +330,7 @@
                 fi
 
             #----- Process has been terminated, delete the container group
+
                 if [[ "$cloud" == "true" ]]; then
 
                     log_debug "Deleting container group '${guid}'..."
@@ -364,20 +365,10 @@
                 if [ "$http_code" = "200" ]; then
                     log "Results collected"
                     log_debug "We got the result file update/${result_file}, we can go on with the processing..."
-                    sleep 5 # wait for the file to be ready
+                    sleep 3 # wait for the file to be ready
                 else
                     log "File 'update/${result_file}' not available."
                     exit 1
-                fi
-
-            #----- Decompress the result file
-
-                if [[ "$production" == "true" ]]; then
-                    log "Installing results"
-                    log_debug "Decompressing ${cs_temp}/${result_file}..."
-                    tar -xzf "${cs_temp}/${result_file}" -C / 
-                    rm -f "${cs_temp}/${result_file}"
-                    log_debug "Local file ${cs_temp}/${result_file} has been removed."
                 fi
 
             #----- Delete the result file from blob storage
@@ -392,6 +383,16 @@
                     log "Failed to delete ${result_file}. HTTP status code: ${delete_http_code}"
                     log_debug "Response: ${delete_response_body}"
                     exit 1
+                fi
+
+            #----- Decompress the result file
+
+                if [[ "$production" == "true" ]]; then
+                    log "Installing results"
+                    log_debug "Decompressing ${cs_temp}/${result_file}..."
+                    tar -xzf "${cs_temp}/${result_file}" -C / 
+                    rm -f "${cs_temp}/${result_file}"
+                    log_debug "Local file ${cs_temp}/${result_file} has been removed."
                 fi
 
             #----- Execute a guid update, this sends also some important information to the backend
@@ -418,8 +419,10 @@
             #----- Restart
 
                 if [[ "$production" == "true" ]]; then
-                    log "Restarting core..."
-                    ha core restart
+                    if [ "$lib_need_restart" -eq 1 ]; then
+                        log "Restarting core..."
+                        ha core restart
+                    fi
                 fi
 
             log "Done"
