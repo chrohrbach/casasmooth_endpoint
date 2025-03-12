@@ -146,9 +146,6 @@
             OAUTH_ENDPOINT=$(extract_secret "OAUTH_ENDPOINT")
             RESOURCE=$(extract_secret "RESOURCE")   
 
-            data_file="dta_${guid}.tar.gz"
-            result_file="res_${guid}.tar.gz"
-
         #----- Check to see if this system is running on HASS
 
         if [[ "$ha_present" == "true" ]]; then
@@ -169,6 +166,9 @@
                     log "guid is required for remoting, exiting..."
                     exit 1
                 fi
+
+                data_file="dta_${guid}.tar.gz"
+                result_file="res_${guid}.tar.gz"
 
                 log "Starting the upload process for remote updating"
 
@@ -454,6 +454,9 @@
 
                 guid="${guid_to_process}"
 
+                data_file="dta_${guid}.tar.gz"
+                result_file="res_${guid}.tar.gz"
+
                 log "Starting the update process"
             
             #----- We are in an empty container, we need to process the data file that was uploaded for us but is it ready?
@@ -472,19 +475,19 @@
                         log "We got the data file update/${data_file}, we can go on with the processing..."
                         break
                     elif [ "$http_code" = "404" ]; then
-                        log "File 'update/${data_file}' not yet available. Waiting for ${poll_interval} seconds..."
+                        log_debug "File 'update/${data_file}' not yet available. Waiting for ${poll_interval} seconds..."
                     else
-                        log "Request for 'update/${data_file}' failed with HTTP code ${http_code}. Waiting for ${poll_interval} seconds..."
+                        log_debug "Request for 'update/${data_file}' failed with HTTP code ${http_code}. Waiting for ${poll_interval} seconds..."
                     fi
                     sleep "$poll_interval"
                     elapsed=$((elapsed + poll_interval))
                 done
-                if [[ "$found" != "true" ]]; then
-                    log "Wait finished but file ${data_file} not present. Exiting the process."
-                    exit 1
-                fi
                 if [ "$elapsed" -ge "$timeout_seconds" ]; then
                     log "Polling timeout reached after $timeout_seconds seconds. We did not see the ${data_file}. Exiting the process."
+                    exit 1
+                fi
+                if [[ "$found" != "true" ]]; then
+                    log "Wait finished but file ${data_file} not present. Exiting the process."
                     exit 1
                 fi
 
