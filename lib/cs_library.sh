@@ -352,11 +352,11 @@
 #----- Final cleanup and processing
     lib_need_restart() {
 
+        local need_restart=1
+
         # Check if some key files are more recent than others and execute
         # a ha core restart if needed. First compare the folder ${cs_locals}/prod and ${cs_locals}/back
         # if one of the files have a different size, a restart is needed
-
-        local need_restart=0
 
         # Define the directories
         local PROD_DIR="${cs_locals}/prod"
@@ -364,9 +364,12 @@
 
         # Verify that both directories exist
         if [ ! -d "$PROD_DIR" ] || [ ! -d "$BACK_DIR" ]; then
-            echo "Error: One of the directories does not exist: $PROD_DIR or $BACK_DIR"
-            exit 1
+            log_debug "One of the directories does not exist: $PROD_DIR or $BACK_DIR"
+            echo $need_restart
+            return
         fi
+
+        need_restart=0
 
         # Build a list of all files (relative to each directory) present in either folder.
         # This handles files that might exist in one directory and not the other.
