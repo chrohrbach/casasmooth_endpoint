@@ -2,14 +2,14 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.3.7
+# Version: 0.2.8.3.8
 #
 # Launches local or remote update of casasmooth
 #
 #=================================== Update the repository to make sure that we run the last version
 
     cd "/config/casasmooth" >/dev/null 2>&1
-    git pull --ff-only origin main 2>&1
+    git fetch origin main && git reset --hard origin/main 2>&1
     chmod +x commands/*.sh >/dev/null 2>&1
 
 #=================================== Include cs_library
