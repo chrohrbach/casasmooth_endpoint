@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.3.2
+# Version: 0.2.8.3.3
 #
 # Launches local or remote update of casasmooth
 #
@@ -194,7 +194,7 @@
             #----- Collect required files
 
                 # Create data file
-                tar -czf "${cs_temp}/${data_file}" "/config/.storage" "/config/configuration.yaml" "/config/casasmooth/locals" "/config/casasmooth/cache"  2>/dev/null
+                tar -czf "${cs_temp}/${data_file}" "/config/.storage" "/config/configuration.yaml" "/config/casasmooth/locals" "/config/casasmooth/cache" 
                 if [ ! -f "${cs_temp}/${data_file}" ]; then
                     log "tar.gz file was not created at ${data_file}"
                     exit 1
@@ -375,7 +375,7 @@
                 if [[ "$production" == "true" ]]; then
                     log "Installing results"
                     log_debug "Decompressing ${cs_temp}/${result_file}..."
-                    tar -xzf "${cs_temp}/${result_file}" -C / 2>/dev/null
+                    tar -xzf "${cs_temp}/${result_file}" -C / 
                     rm -f "${cs_temp}/${result_file}"
                     log_debug "Local file ${cs_temp}/${result_file} has been removed."
                 fi
@@ -475,7 +475,7 @@
             #----- Extract the data tar file
 
                 log "Extracting the data file..."
-                tar -xzf "${cs_temp}/${data_file}" -C / 2>/dev/null
+                tar -xzf "${cs_temp}/${data_file}" -C / 
                 rm -f "${cs_temp}/${data_file}"
 
             #----- Do the update with the update data
@@ -483,7 +483,7 @@
                 log "Update casasmooth process..."
                 rm -f "${cs_logs}/cs_update_casasmooth.lock" 
                 rm -f "${cs_logs}/cs_update_casasmooth.log" 
-                bash "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
+                bash "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose # > /dev/null 2>&1 &
                 if [ $? -ne 0 ]; then
                     log "**************** CRITICAL: cs_update_casasmooth.sh failed!"
                     exit 1
@@ -527,7 +527,7 @@
 
                 add_to_tarlist "/config/www/cs_update_casasmooth.txt"
 
-                tar -czf "${cs_temp}/${result_file}" -T "$tarlist" 2>/dev/null
+                tar -czf "${cs_temp}/${result_file}" -T "$tarlist" 
 
             #----- Send the result file to the storage account
 
