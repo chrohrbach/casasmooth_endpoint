@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.7
+# Version: 1.1.17.8
 #
 # Library function for casasmooth scripts
 #
@@ -298,6 +298,15 @@
             sed -E 's/([][\\^.$*+?/~()])/\\\1/g' <<< "$text"
         }
 
+    # Clean strings with special char that jq dont like
+        lib_clean_for_jq() {
+            local input_string="$1"
+            local cleaned_string
+            # Remove all control characters and the specified punctuation
+            cleaned_string=$(printf '%s' "$input_string" | LC_ALL=C sed -E "s/[[:cntrl:]\\{\\}\"'\\\\\/]//g")
+            echo "$cleaned_string"
+        }
+
 #----- Standard way to include other sources
     include_source(){
         local source_file=$1
@@ -314,13 +323,12 @@
 #----- Analyze if update is required
     lib_get_newest_timestamp() {
         local files=("$@")
-        local newest_timestamp=0 # Initialize to epoch time (or earlier if needed)
-        local early_timestamp=$(date -d "1970-01-01" +%s) # Get epoch timestamp
-        newest_timestamp=$early_timestamp # Default to early timestamp if no file exists
+        local newest_timestamp=0
+
         for file in "${files[@]}"; do
             if [ -f "$file" ]; then
-                file_timestamp=$(stat -c %Y "$file" 2>/dev/null) # Get modification timestamp in seconds since epoch
-                if [ -n "$file_timestamp" ]; then # Check if stat returned a valid timestamp
+                file_timestamp=$(stat -c %Y "$file" 2>/dev/null)
+                if [ -n "$file_timestamp" ]; then
                     if [ "$file_timestamp" -gt "$newest_timestamp" ]; then
                         newest_timestamp=$file_timestamp
                     fi
@@ -329,25 +337,28 @@
         done
         echo "$newest_timestamp"
     }
-
+    lib_update_status() {
+        local json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.config" "${hass_path}/.storage/core.area_registry" "${hass_path}/.storage/core.device_registry" "${hass_path}/.storage/core.entity_registry" )
+        local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" )
+        local sh_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
+        local json_date=$(date -d "@${json_timestamp}" "+%Y-%m-%d %H:%M:%S")
+        local yaml_date=$(date -d "@${yaml_timestamp}" "+%Y-%m-%d %H:%M:%S")
+        local sh_date=$(date -d "@${sh_timestamp}" "+%Y-%m-%d %H:%M:%S")
+        echo "File timestamps:"
+        echo "  JSON: $json_date"
+        echo "  YAML: $yaml_date"
+        echo "  SH:   $sh_date"
+    }
     lib_update_required() {
         local json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.config" "${hass_path}/.storage/core.area_registry" "${hass_path}/.storage/core.device_registry" "${hass_path}/.storage/core.entity_registry" )
         local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" )
         local sh_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
-        if [[ "$json_timestamp" -ge "$yaml_timestamp" || "$json_timestamp" -ge "$sh_timestamp" ]]; then
-            log_debug "Update required: JSON: $json_timestamp, YAML: $yaml_timestamp, SH: $sh_timestamp"
-            echo "true"
-        elif [[ "$sh_timestamp" -ge "$json_timestamp" ]]; then
-            log_debug "Update required: JSON: $json_timestamp, YAML: $yaml_timestamp, SH: $sh_timestamp"
-            echo "true"
-        elif [[ "$sh_timestamp" -ge "$yaml_timestamp" ]]; then
-            log_debug "Update required: JSON: $json_timestamp, YAML: $yaml_timestamp, SH: $sh_timestamp"
+        if [[ "$json_timestamp" -gt "$yaml_timestamp" || "$sh_timestamp" -gt "$yaml_timestamp" ]]; then
             echo "true"
         else
-            log_debug "Update NOT required: JSON: $json_timestamp, YAML: $yaml_timestamp, SH: $sh_timestamp"
             echo "false"
         fi
-    }   
+    }
 
 #----- Final cleanup and processing
     lib_need_restart() {
@@ -379,7 +390,6 @@
 
                 # Check that the file exists in both directories.
                 if [ ! -f "$prod_file" ] || [ ! -f "$back_file" ]; then
-                    log "Difference detected: $rel_path is missing in one of the directories."
                     need_restart="true"
                     break
                 fi
@@ -389,7 +399,6 @@
                 local size_back=$(stat -c %s "$back_file")
 
                 if [ "$size_prod" -ne "$size_back" ]; then
-                    log "Difference detected: $rel_path has size $size_prod (prod) vs $size_back (back)."
                     need_restart="true"
                     break
                 fi

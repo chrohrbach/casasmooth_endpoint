@@ -2,9 +2,9 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version 1.5.1
+# Version 1.5.2
 #
-# Send SMS using Swisscom service (Updated for New API with Token Caching and Unified Number Validation)
+# Send SMS using Swisscom service
 #
 #=================================== Include cs_library
     include="/config/casasmooth/lib/cs_library.sh"
@@ -14,6 +14,23 @@
     fi
 #===================================
 
+#----- Parameter Validation -----
+if [ "$#" -ne 3 ]; then
+    log_error "Usage: $0 <from_phone_number> <to_phone_number> <message_text>"
+    log_error "Please provide exactly three arguments: from phone number, to phone number, and message text."
+    exit 1
+fi
+
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
+    log_error "Error: All parameters (from_phone_number, to_phone_number, message_text) must be provided and not empty."
+    exit 1
+fi
+
+from_input="$1"
+to_input="$2"
+text="$3"
+
+#----- Secret Extraction -----
 SWISSCOM_ENDPOINT_URL=$(extract_secret "SWISSCOM_ENDPOINT_URL")  # API Endpoint for sending SMS
 SWISSCOM_SCS_VERSION=$(extract_secret "SWISSCOM_SCS_VERSION")    # API Version
 
@@ -25,10 +42,6 @@ OAUTH_TOKEN_URL=$(extract_secret "SWISSCOM_TOKEN_URL")            # e.g., https:
 #----- Token Cache File Path
 token_cache_file="${cs_path}/cache/token_cache.txt"
 
-from_input="$1"
-to_input="$2"
-text="$3"
-
 #----- Input Validation Functions
 
 # Validate and normalize phone number (E.164 format)
@@ -36,29 +49,34 @@ validate_phone_number() {
     local number="$1"
     local normalized_number
 
+    # Remove any spaces, dashes, dots, or parentheses from the input number before normalization
+    number=$(sed 's/[[:space:][dash][dot][parenth]]//g' <<< "$number")
+
     # Check if the number starts with '00' and replace it with '+'
     if [[ "$number" =~ ^00 ]]; then
         normalized_number="+${number:2}"
-        log_success "Normalized number from '00' to '+': $number -> $normalized_number"
     else
         normalized_number="$number"
     fi
 
     # Validate the normalized number against E.164 format
-    if [[ ! "$normalized_number" =~ ^\+[1-9][0-9]{7,14}$ ]]; then
-        log_error "Invalid phone number format: $number -> $normalized_number"
-        exit 1
+    # E.164: '+' followed by country code (1-3 digits), then subscriber number (variable length)
+    # Relaxed the regex to allow for slightly more variation in subscriber number length after country code
+    if [[ ! "$normalized_number" =~ ^\+[1-9][0-9]{1,14}$ ]]; then
+        return 1 # Indicate failure
     fi
 
     # Return the normalized number
     echo "$normalized_number"
+    return 0 # Indicate success
 }
+
 
 # Validate message length (assuming max 160 characters)
 validate_message_length() {
     local message="$1"
     if [ "${#message}" -gt 160 ]; then
-        log_error "Message text exceeds 160 characters."
+        log_error "Message text exceeds 160 characters. Length: ${#message}"
         exit 1
     fi
 }
@@ -67,16 +85,22 @@ validate_message_length() {
 
 # Validate and normalize the 'from' phone number
 from=$(validate_phone_number "$from_input")
+if [ $? -ne 0 ]; then
+    exit 1
+fi
 
 # Validate and normalize the 'to' phone number
 to=$(validate_phone_number "$to_input")
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+
 
 # Validate message length
 validate_message_length "$text"
 
 #----- Function to Obtain a New Access Token
 get_access_token() {
-    log_success "Requesting a new access token from Swisscom..."
 
     # Perform the token request using the correct POST body parameters
     response=$(curl -s -X POST "$OAUTH_TOKEN_URL" \
@@ -88,12 +112,7 @@ get_access_token() {
     access_token=$(echo "$response" | jq -r '.access_token')
     expires_in=$(echo "$response" | jq -r '.expires_in')
 
-    # Temporary Debugging Logs
-    log_success "Parsed Access Token: $access_token"
-    log_success "Parsed Expires In: $expires_in"
-
     if [ -z "$access_token" ] || [ -z "$expires_in" ]; then
-        log_error "Failed to obtain access token. Response: $response"
         exit 1
     fi
 
@@ -104,8 +123,6 @@ get_access_token() {
     # Store the new token and expiration time in the cache file
     echo "$access_token\n$expires_at" > "$token_cache_file"
     chmod 600 "$token_cache_file"  # Secure the token cache file
-
-    log_success "New access token obtained and cached. Expires in $((expires_in / 86400)) days."
 
     echo "$access_token"
 }
@@ -124,17 +141,10 @@ get_valid_access_token() {
         if [ -n "$token" ] && [ -n "$expires_at" ]; then
             current_time=$(date +%s)
             if [ "$current_time" -lt "$expires_at" ]; then
-                log_success "Using cached access token."
                 echo "$token"
                 return
-            else
-                log_success "Cached access token expired. Fetching a new one."
             fi
-        else
-            log_error "Token cache file is corrupted or incomplete."
         fi
-    else
-        log_success "No cached access token found. Fetching a new one."
     fi
 
     # If token is not valid or cache is missing/corrupted, fetch a new one
@@ -160,9 +170,6 @@ send_sms() {
             text: $message
         }')
 
-    # Log the payload for debugging (optional, remove in production)
-    log_success "Sending payload: $payload"
-
     # Send the SMS request using curl with response and HTTP status code
     response=$(curl -s -w "\n%{http_code}" -X POST \
         -H "Authorization: Bearer ${access_token}" \
@@ -175,9 +182,6 @@ send_sms() {
     # Split response body and status code
     response_body=$(echo "$response" | sed '$d')
     status_code=$(echo "$response" | tail -n1)
-
-    # Log the full response for debugging (optional, remove in production)
-    log_success "API Response Body: $response_body"
 
     # Log based on response
     if [[ "$status_code" -ge 200 && "$status_code" -lt 300 ]]; then
