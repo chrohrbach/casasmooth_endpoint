@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.3.8
+# Version: 0.2.8.3.9
 #
 # Launches local or remote update of casasmooth
 #
@@ -44,8 +44,6 @@
         echo "Script is already running (lock is held on $cs_update_lock_file). Exiting."
         exit 1
     fi
-
-#===================================
 
 #----- Check options
     usage() {
@@ -566,7 +564,6 @@
                 log_debug "Upload successful. HTTP status code: ${http_code}"
 
             #----- No need to cleanup the container as it is ephemeral
-          
             log "Update completed."
 
         fi
