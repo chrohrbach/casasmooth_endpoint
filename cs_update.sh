@@ -56,8 +56,12 @@
 
     forward_args=() # Initialize an empty array to store arguments to forward
 
-    cloud=true
+    verbose=true
+    log=true
+
     production=true
+
+    cloud=true
     remoting=false
 
     while [[ "$#" -gt 0 ]]; do
