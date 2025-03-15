@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.5.2
+# Version: 1.1.5.3
 #
 # Register the system and various infos using a REST endpoint
 #
@@ -83,9 +83,9 @@ addons=$(ha addons list)
 backup="https://teleia.sharepoint.com/sites/casasmooth/Configurations/Forms/AllItems.aspx?id=%2Fsites%2Fcasasmooth%2FConfigurations%2F${guid}%2Fbackups"
 
 if [ -z "$email" ]; then
-    log_warning "No email provided will keep the one that is registered. This will be corrected as soon as the user defines the email address in the UI."
+    log_warning "No email provided will keep the one that is registered, user should define it in the UI."
 else
-    log "System will be registered with $guid $email in the casasmooth backend. The user needs to define their email anyway in the UI."
+    log "System will be registered with $guid $email in the casasmooth backend. The user needs to define mail in the UI."
 fi
 
 endpoint_url="https://prod-14.switzerlandnorth.logic.azure.com:443/workflows/59b3f32554494ae280c720fdec68e1ca/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=D3FOL7LeSk3plf6vqRQLcbuv39h6GqRlCX215njtPrI"

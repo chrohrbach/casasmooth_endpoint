@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.9
+# Version: 0.2.10
 #
 # Launches local or remote update of casasmooth
 #
@@ -56,11 +56,7 @@
 
     forward_args=() # Initialize an empty array to store arguments to forward
 
-    verbose=true
-    log=true
-
     production=true
-
     cloud=true
     remoting=false
 
@@ -142,6 +138,7 @@
 
                 if [[ "$(lib_update_required)" == "false" ]]; then
                     log "casasmooth remote update is not required."
+                    echo "casasmooth remote update is not required."
                     exit 0
                 else
                     log "Update casasmooth remote starting as a detached process..."

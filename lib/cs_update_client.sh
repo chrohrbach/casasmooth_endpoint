@@ -47,6 +47,50 @@
         exit 1
     fi
 
+#----- Check options
+    usage() {
+        echo "Usage: $0 [OPTIONS]"
+        echo ""
+        echo "Options:"
+        echo "  --nocloud        Disable remoting in the cloud, used to debug in a local container"
+    }
+
+    forward_args=() # Initialize an empty array to store arguments to forward
+
+    production=true
+
+    cloud=true
+
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            --log)
+                log=true
+                forward_args+=("$1") 
+                shift
+                ;;
+            --verbose)
+                verbose=true
+                forward_args+=("$1") 
+                shift
+                ;;
+            --debug)
+                debug=true
+                forward_args+=("$1") 
+                shift
+                ;;
+            --nocloud)
+                cloud=false
+                shift
+                ;;
+            *) # Positional argument or unknown option without leading '-'
+                forward_args+=("$1") # Add positional/unknown argument to forward_args
+                shift
+                ;;
+        esac
+    done
+
+    # Now "$@" contains only the positional arguments/files
+
 #----- guid is required
 
     guid=$(jq -r '.data.uuid' "${hass_path}/.storage/core.uuid" 2>/dev/null) || true
@@ -330,6 +374,7 @@
     mkdir -p "${hass_path}/www"
     mkdir -p "${hass_path}/www/community"
     mkdir -p "${hass_path}/www/images"
+    mkdir -p "${hass_path}/www/tts"
 
     # Copy custom cards
     safe_copy "${cs_resources}" "${hass_path}/www/community"
