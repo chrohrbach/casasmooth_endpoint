@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.1.1
+# Version: 0.1.2
 #
 # This script is the client part of the remote update process. 
 # This has been separated from the main cs_update due to 60s timeout that 
@@ -63,6 +63,23 @@
     result_file="res_${guid}.tar.gz"
 
     log "Starting the upload process for remote updating"
+
+#----- Setup the environment to be able to execute all remoting interactions with Azure
+
+    LOCATION=$(extract_secret "LOCATION")
+    ACR_SERVER=$(extract_secret "ACR_SERVER")
+    ACR_USERNAME=$(extract_secret "ACR_USERNAME")
+    ACR_PASSWORD=$(extract_secret "ACR_PASSWORD")
+    IMAGE=$(extract_secret "IMAGE")
+    MGMT_URL=$(extract_secret "MGMT_URL")
+    AZURE_RESOURCE_GROUP=$(extract_secret "AZURE_RESOURCE_GROUP")
+    AZURE_SUBSCRIPTION_ID=$(extract_secret "AZURE_SUBSCRIPTION_ID")
+    BLOB_SERVICE=$(extract_secret "BLOB_SERVICE")
+    STORAGE_SAS_TOKEN=$(extract_secret "STORAGE_SAS_TOKEN")
+    CLIENT_ID=$(extract_secret "CLIENT_ID")
+    CLIENT_SECRET=$(extract_secret "CLIENT_SECRET")
+    OAUTH_ENDPOINT=$(extract_secret "OAUTH_ENDPOINT")
+    RESOURCE=$(extract_secret "RESOURCE")   
 
 #----- Collect required files
 

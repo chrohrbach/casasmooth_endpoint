@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.8.4
+# Version: 0.2.9
 #
 # Launches local or remote update of casasmooth
 #
@@ -131,22 +131,8 @@
 
         #----- Setup the environment to be able to execute all remoting interactions with Azure
 
-            LOCATION=$(extract_secret "LOCATION")
-            ACR_SERVER=$(extract_secret "ACR_SERVER")
-            ACR_USERNAME=$(extract_secret "ACR_USERNAME")
-            ACR_PASSWORD=$(extract_secret "ACR_PASSWORD")
-            IMAGE=$(extract_secret "IMAGE")
-            MGMT_URL=$(extract_secret "MGMT_URL")
-            AZURE_RESOURCE_GROUP=$(extract_secret "AZURE_RESOURCE_GROUP")
-            AZURE_SUBSCRIPTION_ID=$(extract_secret "AZURE_SUBSCRIPTION_ID")
             BLOB_SERVICE=$(extract_secret "BLOB_SERVICE")
-            CONTAINER_NAME=$(extract_secret "CONTAINER_NAME")
             STORAGE_SAS_TOKEN=$(extract_secret "STORAGE_SAS_TOKEN")
-            CLIENT_ID=$(extract_secret "CLIENT_ID")
-            CLIENT_SECRET=$(extract_secret "CLIENT_SECRET")
-            TENANT_ID=$(extract_secret "TENANT_ID")
-            OAUTH_ENDPOINT=$(extract_secret "OAUTH_ENDPOINT")
-            RESOURCE=$(extract_secret "RESOURCE")   
 
         #----- Check to see if this system is running on HASS
 
