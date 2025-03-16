@@ -112,7 +112,7 @@ trace() {
     fi
 
     ha_present="false"
-    if ha --help 2>/dev/null; then
+    if command -v ha >/dev/null 2>&1; then
         ha_present="true"
     fi
 
