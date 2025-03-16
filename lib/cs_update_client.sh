@@ -2,21 +2,20 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.1.2.3
+# Version: 0.1.2.4
 #
 # This script is the client part of the remote update process. 
 # This has been separated from the main cs_update due to 60s timeout that 
 # the shell_command applies to script launched from hass.
 #
-temp_log="$(basename ${0%.*}).log"
-: > "${temp_log}"
-trace() { 
-    printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "${temp_log}"
-}
-
 #=================================== Update the repository to make sure that we run the last version (even in a sub/detached process)
 
     cd "/config/casasmooth" >/dev/null 2>&1
+    temp_log="/config/casasmooth/logs/$(basename ${0%.*}).log"
+    : > "${temp_log}"
+    trace() { 
+        printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "${temp_log}"
+    }
     trace "Update sources"
     git fetch origin main && git reset --hard origin/main >/dev/null 2>&1
     chmod +x commands/*.sh >/dev/null 2>&1

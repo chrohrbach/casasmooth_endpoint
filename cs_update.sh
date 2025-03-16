@@ -2,20 +2,20 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.10.6
+# Version: 0.2.10.7
 #
 # Launches local or remote update of casasmooth
 #
-temp_log="$(basename ${0%.*}).log"
-: > "${temp_log}"
-trace() { 
-    printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "${temp_log}"
-}
 #=================================== Update the repository to make sure that we run the last version
 
     cd "/config/casasmooth" >/dev/null 2>&1
+    temp_log="$(basename ${0%.*}).log"
+    : > "${temp_log}"
+    trace() { 
+        printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "${temp_log}"
+    }
     trace "Updating casasmooth sources"
-    git fetch origin main && git reset --hard origin/main 2>&1
+    #git fetch origin main && git reset --hard origin/main 2>&1
     chmod +x commands/*.sh >/dev/null 2>&1
 
 #=================================== Include cs_library
@@ -112,7 +112,7 @@ trace() {
     fi
 
     ha_present="true"
-    if [[ "$(command -v ha)" == "" ]]; then
+    if [[ ! -f "/usr/bin/ha" ]]; then
         # No HA present !!!
         ha_present="false"
     fi
