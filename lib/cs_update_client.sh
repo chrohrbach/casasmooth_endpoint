@@ -9,7 +9,7 @@
 # the shell_command applies to script launched from hass.
 #
 temp_log="$(basename ${0%.*}).log"
-> "${temp_log}"
+: > "${temp_log}"
 trace() { 
     printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "${temp_log}"
 }
