@@ -2,13 +2,18 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.10
+# Version: 0.2.10.2
 #
 # Launches local or remote update of casasmooth
 #
+> '$(basename "${0%.*}").log'
+trace() { 
+    printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a '$(basename "${0%.*}").log'
+}
 #=================================== Update the repository to make sure that we run the last version
 
     cd "/config/casasmooth" >/dev/null 2>&1
+    trace "Updating casasmooth sources"
     git fetch origin main && git reset --hard origin/main 2>&1
     chmod +x commands/*.sh >/dev/null 2>&1
 
@@ -16,18 +21,19 @@
 
     include="/config/casasmooth/lib/cs_library.sh"
     if ! source "${include}"; then
-        echo "ERROR: Failed to source ${include}"
+        trace "ERROR: Failed to source ${include}"
         exit 1
     fi
 
 #=================================== Concurrency management
 
+    trace "Set lock"
     cs_update_lock_file="${cs_path}/cs_update.lock"
 
     # Function to remove the lock file
     remove_cs_update_lock_file() {
         if [ -f "$cs_update_lock_file" ]; then
-            log "Removing lock file ${cs_update_lock_file}"
+            trace "Reset lock"
             rm -f "$cs_update_lock_file"
         fi
         # Optionally, close the file descriptor if it's still open (though it should be closed when the script exits)
@@ -41,7 +47,7 @@
     exec 9>"$cs_update_lock_file"
     # Attempt to acquire an exclusive lock using flock
     if ! flock -n 9; then # -n: non-blocking, returns immediately if lock cannot be acquired
-        echo "Script is already running (lock is held on $cs_update_lock_file). Exiting."
+        trace "Script is already running"
         exit 1
     fi
 
@@ -116,10 +122,10 @@
         #----- We are on a system running HASS, we do a local update
 
         if [[ "$(lib_update_required)" == "false" ]]; then
-            log "casasmooth local update is not required."
+            trace "casasmooth local update is not required."
             exit 0
         else
-            log "Update casasmooth locally starting as a detached process..."
+            trace "Update casasmooth locally starting as a detached process..."
             timeout "30m" setsid bash "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
         fi
     
@@ -137,11 +143,10 @@
             #----- We are on a system running HASS
 
                 if [[ "$(lib_update_required)" == "false" ]]; then
-                    log "casasmooth remote update is not required."
-                    echo "casasmooth remote update is not required."
+                    trace "casasmooth remote update is not required."
                     exit 0
                 else
-                    log "Update casasmooth remote starting as a detached process..."
+                    trace "Update casasmooth remote starting as a detached process..."
                     timeout "30m" setsid bash "${cs_lib}/cs_update_client.sh" "${forward_args[@]}" --log --verbose > /dev/null 2>&1 &
                 fi
 
@@ -150,7 +155,7 @@
             #----- We are on a system without HASS, probably a VM, a container, or a terminal, this means that we dont have timeout problems induced by hass
 
                 if [[ -z "${guid_to_process:-}" ]]; then
-                    log "guid_to_process is required for remoting, exiting..."
+                    trace "guid_to_process is required for remoting, exiting..."
                     exit 1
                 fi
 
@@ -159,11 +164,9 @@
                 data_file="dta_${guid}.tar.gz"
                 result_file="res_${guid}.tar.gz"
 
-                log "Starting the update process"
+                trace "Starting client update process"
             
             #----- We are in an empty container, we need to process the data file that was uploaded for us but is it ready?
-
-                log "Starting to poll for data..."
 
                 found=false
                 timeout_seconds=600
@@ -174,39 +177,39 @@
                     http_code=$(curl --silent --show-error --output "${cs_temp}/${data_file}" --write-out "%{http_code}" "${BLOB_SERVICE}/update/${data_file}?${STORAGE_SAS_TOKEN}")
                     if [ "$http_code" = "200" ]; then
                         found=true
-                        log "We got the data file update/${data_file}, we can go on with the processing..."
+                        trace "Data file found"
                         break
                     elif [ "$http_code" = "404" ]; then
-                        log_debug "File 'update/${data_file}' not yet available. Waiting for ${poll_interval} seconds..."
+                        trace "Not yet available, wait for ${poll_interval} seconds"
                     else
-                        log_debug "Request for 'update/${data_file}' failed with HTTP code ${http_code}. Waiting for ${poll_interval} seconds..."
+                        trace "Request failed, wait for ${poll_interval} seconds"
                     fi
                     sleep "$poll_interval"
                     elapsed=$((elapsed + poll_interval))
                 done
                 if [ "$elapsed" -ge "$timeout_seconds" ]; then
-                    log "Polling timeout reached after $timeout_seconds seconds. We did not see the ${data_file}. Exiting the process."
+                    trace "Polling timeout reached, no file found"
                     exit 1
                 fi
                 if [[ "$found" != "true" ]]; then
-                    log "Wait finished but file ${data_file} not present. Exiting the process."
+                    trace "No file found"
                     exit 1
                 fi
 
             #----- Extract the data tar file
 
-                log "Extracting the data file..."
+                trace "Extracting data"
                 tar -xzf "${cs_temp}/${data_file}" -C / > /dev/null 2>&1
                 rm -f "${cs_temp}/${data_file}"
 
             #----- Do the update with the update data
 
-                log "Update casasmooth process..."
+                trace "Launch casasmooth update"
                 rm -f "${cs_logs}/cs_update_casasmooth.lock" 
                 rm -f "${cs_logs}/cs_update_casasmooth.log" 
                 bash "${cs_lib}/cs_update_casasmooth.sh" "${forward_args[@]}" --log --verbose # > /dev/null 2>&1 &
                 if [ $? -ne 0 ]; then
-                    log "**************** CRITICAL: cs_update_casasmooth.sh failed!"
+                    trace "**************** CRITICAL: cs_update_casasmooth.sh failed!"
                     exit 1
                 fi
 
@@ -219,8 +222,6 @@
                     local file="$1"
                     if [ -e "$file" ]; then
                         echo "$file" >> "$tarlist"
-                    else
-                        log_debug "File not found, skipping: $file"
                     fi
                 }
 
@@ -248,11 +249,12 @@
 
                 add_to_tarlist "/config/www/cs_update_casasmooth.txt"
 
+                trace "Collecting results"
                 tar -czf "${cs_temp}/${result_file}" -T "$tarlist" > /dev/null 2>&1
 
             #----- Send the result file to the storage account
 
-                log "Uploading file ${result_file} to blob storage account, container ${CONTAINER_NAME}, folder update..."
+                trace "Uploading results to blob"
 
                 response=$(curl -s -w "\n%{http_code}" -X PUT -H "x-ms-blob-type: BlockBlob" --data-binary @"${cs_temp}/${result_file}" "${BLOB_SERVICE}/update/${result_file}?${STORAGE_SAS_TOKEN}")
 
@@ -260,15 +262,12 @@
                 response_body=$(echo "$response" | sed '$d')
 
                 if [ "$http_code" -ne "201" ]; then
-                    log "Failed to upload ${result_file}. HTTP status code: ${http_code}"
-                    log_debug "Response: ${response_body}"
+                    trace "Failed to upload results"
                     exit 1
                 fi
 
-                log_debug "Upload successful. HTTP status code: ${http_code}"
-
             #----- No need to cleanup the container as it is ephemeral
-            log "Update completed."
+            trace "Update done"
 
         fi
 
