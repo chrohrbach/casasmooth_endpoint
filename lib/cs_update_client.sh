@@ -2,16 +2,18 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.1.2.2
+# Version: 0.1.2.3
 #
 # This script is the client part of the remote update process. 
 # This has been separated from the main cs_update due to 60s timeout that 
 # the shell_command applies to script launched from hass.
 #
-> '$(basename "${0%.*}").log'
+temp_log="$(basename ${0%.*}).log"
+> "${temp_log}"
 trace() { 
-    printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a '$(basename "${0%.*}").log'
+    printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "${temp_log}"
 }
+
 #=================================== Update the repository to make sure that we run the last version (even in a sub/detached process)
 
     cd "/config/casasmooth" >/dev/null 2>&1

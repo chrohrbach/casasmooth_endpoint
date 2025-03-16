@@ -2,13 +2,14 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.10.2
+# Version: 0.2.10.3
 #
 # Launches local or remote update of casasmooth
 #
-> '$(basename "${0%.*}").log'
+temp_log="$(basename ${0%.*}).log"
+> "${temp_log}"
 trace() { 
-    printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a '$(basename "${0%.*}").log'
+    printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "${temp_log}"
 }
 #=================================== Update the repository to make sure that we run the last version
 
