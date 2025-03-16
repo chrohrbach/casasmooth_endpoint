@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.10.5
+# Version: 0.2.10.6
 #
 # Launches local or remote update of casasmooth
 #
@@ -111,9 +111,10 @@ trace() {
         remote_update=true
     fi
 
-    ha_present="false"
-    if command -v ha >/dev/null 2>&1; then
-        ha_present="true"
+    ha_present="true"
+    if [[ "$(command -v ha)" == "" ]]; then
+        # No HA present !!!
+        ha_present="false"
     fi
 
 #----- Update process
