@@ -237,7 +237,7 @@ trace() {
                     add_to_tarlist "$file"
                 done
 
-                add_to_tarlist "/config/casasmooth/cache/cs_registry_data.sh"
+                add_to_tarlist "/config/casasmooth/locals/cs_registry_data.sh"
 
                 add_to_tarlist "/config/casasmooth/lib/cs_library.sh"
                 add_to_tarlist "/config/casasmooth/lib/.cs_secrets.yaml"
