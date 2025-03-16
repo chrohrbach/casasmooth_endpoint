@@ -15,7 +15,7 @@
         printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "${temp_log}"
     }
     trace "Updating casasmooth sources"
-    #git fetch origin main && git reset --hard origin/main 2>&1
+    git fetch origin main && git reset --hard origin/main 2>&1
     chmod +x commands/*.sh >/dev/null 2>&1
 
 #=================================== Include cs_library
