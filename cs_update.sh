@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.10.3
+# Version: 0.2.10.4
 #
 # Launches local or remote update of casasmooth
 #
@@ -236,6 +236,8 @@ trace() {
                 find /config/casasmooth/dashboards -type f -name 'cs_dashboard.yaml' -print0 | while IFS= read -r -d $'\0' file; do
                     add_to_tarlist "$file"
                 done
+
+                add_to_tarlist "/config/casasmooth/cache/cs_registry_data.sh"
 
                 add_to_tarlist "/config/casasmooth/lib/cs_library.sh"
                 add_to_tarlist "/config/casasmooth/lib/.cs_secrets.yaml"

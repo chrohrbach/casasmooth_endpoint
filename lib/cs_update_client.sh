@@ -142,6 +142,18 @@ trace() {
         exit 1
     fi
 
+#----- Cleanup the possible existing blobs from blob storage
+
+    if [[ "$production" == "true" ]]; then
+
+        trace "Deleting file ${data_file} from ${BLOB_SERVICE}/update/${data_file}..."
+        delete_response=$(curl -s -w "\n%{http_code}" -X DELETE "${BLOB_SERVICE}/update/${data_file}?${STORAGE_SAS_TOKEN}")
+
+        trace "Deleting file ${result_file} from ${BLOB_SERVICE}/update/${result_file}..."
+        delete_response=$(curl -s -w "\n%{http_code}" -X DELETE "${BLOB_SERVICE}/update/${result_file}?${STORAGE_SAS_TOKEN}")
+
+    fi
+
 #----- Send the files to the storage account, they will be downloaded by the container
     
     trace "Uploading ${data_file} to ${BLOB_SERVICE}/update/${data_file}..."
