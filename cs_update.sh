@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.10.7
+# Version: 0.2.10.8
 #
 # Launches local or remote update of casasmooth
 #
@@ -107,13 +107,11 @@
 
     remote_update=$remoting
     if [[ ! -f "${cs_lib}/cs_update_casasmooth.sh" ]]; then
-        # No local cs_update_casasmooth found !!!
         remote_update=true
     fi
 
     ha_present="true"
-    if [[ ! -f "/usr/bin/ha" ]]; then
-        # No HA present !!!
+    if [[ ! -f "${hass_path}/.storage/core.entity_registry" ]]; then
         ha_present="false"
     fi
 
