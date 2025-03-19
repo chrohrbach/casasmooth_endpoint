@@ -134,7 +134,7 @@
         #----- Setup the environment to be able to execute all remoting interactions with Azure
 
             BLOB_SERVICE=$(extract_secret "BLOB_SERVICE")
-            STORAGE_SAS_TOKEN=$(extract_secret "STORAGE_SAS_TOKEN")
+            UPDATE_SAS_TOKEN=$(extract_secret "UPDATE_SAS_TOKEN")
 
         #----- Check to see if this system is running on HASS
 
@@ -174,7 +174,7 @@
                 elapsed=0
                 while [ "$elapsed" -lt "$timeout_seconds" ]; do
                     # Attempt to download the file and capture the HTTP status code
-                    http_code=$(curl --silent --show-error --output "${cs_temp}/${data_file}" --write-out "%{http_code}" "${BLOB_SERVICE}/update/${data_file}?${STORAGE_SAS_TOKEN}")
+                    http_code=$(curl --silent --show-error --output "${cs_temp}/${data_file}" --write-out "%{http_code}" "${BLOB_SERVICE}/update/${data_file}?${UPDATE_SAS_TOKEN}")
                     if [ "$http_code" = "200" ]; then
                         found=true
                         trace "Data file found"
@@ -258,7 +258,7 @@
 
                 trace "Uploading results to blob"
 
-                response=$(curl -s -w "\n%{http_code}" -X PUT -H "x-ms-blob-type: BlockBlob" --data-binary @"${cs_temp}/${result_file}" "${BLOB_SERVICE}/update/${result_file}?${STORAGE_SAS_TOKEN}")
+                response=$(curl -s -w "\n%{http_code}" -X PUT -H "x-ms-blob-type: BlockBlob" --data-binary @"${cs_temp}/${result_file}" "${BLOB_SERVICE}/update/${result_file}?${UPDATE_SAS_TOKEN}")
 
                 http_code=$(echo "$response" | tail -n1)
                 response_body=$(echo "$response" | sed '$d')

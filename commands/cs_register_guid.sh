@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.5.3
+# Version: 1.1.5.4
 #
 # Register the system and various infos using a REST endpoint
 #
@@ -25,11 +25,20 @@ else
   on_ha=false
 fi
 
-log "Collecting data..."
+log "Check guid..."
 
 if [ -z "${guid:-}" ]; then
-    guid=$(jq -r ".data.uuid" "$hass_path/.storage/core.uuid" 2>/dev/null) || { log_error "Failed to retrieve guid from ${hass_path}/.storage/core.uuid"; exit 1; }
+    guid=$(jq -r ".data.uuid" "${hass_path}/.storage/core.uuid" 2>/dev/null) || { log_error "Failed to retrieve guid from ${hass_path}/.storage/core.uuid"; exit 1; }
 fi
+
+if [[ ! "$guid" == "csuuid-"* ]]; then
+    log "System does not have a valid casasmooth GUID, updating it."
+    csguid="csuuid-$(cat /proc/sys/kernel/random/uuid)"
+    sed -i "s|$guid|$csguid|g" "${hass_path}/.storage/core.uuid" || { log_error "Failed to update GUID core.uuid"; exit 1; }
+    guid=${csguid}
+fi
+
+log "Collecting data..."
 
 trackers=""
 if [[ -t reg_device_trackers && ${#reg_device_trackers[@]} -gt 0 ]]; then

@@ -126,7 +126,7 @@
     AZURE_RESOURCE_GROUP=$(extract_secret "AZURE_RESOURCE_GROUP")
     AZURE_SUBSCRIPTION_ID=$(extract_secret "AZURE_SUBSCRIPTION_ID")
     BLOB_SERVICE=$(extract_secret "BLOB_SERVICE")
-    STORAGE_SAS_TOKEN=$(extract_secret "STORAGE_SAS_TOKEN")
+    UPDATE_SAS_TOKEN=$(extract_secret "UPDATE_SAS_TOKEN")
     CLIENT_ID=$(extract_secret "CLIENT_ID")
     CLIENT_SECRET=$(extract_secret "CLIENT_SECRET")
     OAUTH_ENDPOINT=$(extract_secret "OAUTH_ENDPOINT")
@@ -146,10 +146,10 @@
     if [[ "$production" == "true" ]]; then
 
         trace "Deleting file ${data_file} from ${BLOB_SERVICE}/update/${data_file}..."
-        delete_response=$(curl -s -w "\n%{http_code}" -X DELETE "${BLOB_SERVICE}/update/${data_file}?${STORAGE_SAS_TOKEN}")
+        delete_response=$(curl -s -w "\n%{http_code}" -X DELETE "${BLOB_SERVICE}/update/${data_file}?${UPDATE_SAS_TOKEN}")
 
         trace "Deleting file ${result_file} from ${BLOB_SERVICE}/update/${result_file}..."
-        delete_response=$(curl -s -w "\n%{http_code}" -X DELETE "${BLOB_SERVICE}/update/${result_file}?${STORAGE_SAS_TOKEN}")
+        delete_response=$(curl -s -w "\n%{http_code}" -X DELETE "${BLOB_SERVICE}/update/${result_file}?${UPDATE_SAS_TOKEN}")
 
     fi
 
@@ -159,7 +159,7 @@
 
     # Perform the REST call using curl.
     
-    response=$(curl -s -w "\n%{http_code}" -X PUT -H "x-ms-blob-type: BlockBlob" --data-binary @"${cs_temp}/${data_file}" "${BLOB_SERVICE}/update/${data_file}?${STORAGE_SAS_TOKEN}")
+    response=$(curl -s -w "\n%{http_code}" -X PUT -H "x-ms-blob-type: BlockBlob" --data-binary @"${cs_temp}/${data_file}" "${BLOB_SERVICE}/update/${data_file}?${UPDATE_SAS_TOKEN}")
 
     # Separate the HTTP status code from the response body.
     
@@ -273,7 +273,7 @@
         attempt=$((attempt+1))
         trace "Attempt ${attempt}/${max_attempts}: Polling..."
 
-        blob_url="${BLOB_SERVICE}/update/${result_file}?${STORAGE_SAS_TOKEN}"
+        blob_url="${BLOB_SERVICE}/update/${result_file}?${UPDATE_SAS_TOKEN}"
         trace "Checking URL: ${blob_url}" # trace the full URL
 
         http_status=$(curl -s -o /dev/null -w "%{http_code}" -I "${blob_url}")
@@ -303,7 +303,7 @@
 
         trace "Deleting file ${data_file} from ${BLOB_SERVICE}/update/${data_file}..."
 
-        delete_response=$(curl -s -w "\n%{http_code}" -X DELETE "${BLOB_SERVICE}/update/${data_file}?${STORAGE_SAS_TOKEN}")
+        delete_response=$(curl -s -w "\n%{http_code}" -X DELETE "${BLOB_SERVICE}/update/${data_file}?${UPDATE_SAS_TOKEN}")
         delete_http_code=$(echo "$delete_response" | tail -n1)
         delete_response_body=$(echo "$delete_response" | sed '$d')
 
@@ -346,7 +346,7 @@
 #----- Get the result file
 
     rm -f ${cs_temp}/${result_file}
-    http_code=$(curl --silent --show-error --output "${cs_temp}/${result_file}" --write-out "%{http_code}" "${BLOB_SERVICE}/update/${result_file}?${STORAGE_SAS_TOKEN}")
+    http_code=$(curl --silent --show-error --output "${cs_temp}/${result_file}" --write-out "%{http_code}" "${BLOB_SERVICE}/update/${result_file}?${UPDATE_SAS_TOKEN}")
     
     if [ "$http_code" = "200" ]; then
         trace "We got the result file update/${result_file}, we can go on with the processing..."
@@ -360,7 +360,7 @@
 
     trace "Deleting file ${result_file} from ${BLOB_SERVICE}/update/${result_file}..."
 
-    delete_response=$(curl -s -w "\n%{http_code}" -X DELETE "${BLOB_SERVICE}/update/${result_file}?${STORAGE_SAS_TOKEN}")
+    delete_response=$(curl -s -w "\n%{http_code}" -X DELETE "${BLOB_SERVICE}/update/${result_file}?${UPDATE_SAS_TOKEN}")
     delete_http_code=$(echo "$delete_response" | tail -n1)
     delete_response_body=$(echo "$delete_response" | sed '$d')
 

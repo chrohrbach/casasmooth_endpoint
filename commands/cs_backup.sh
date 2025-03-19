@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.2.5
+# Version: 1.2.6
 #
 # Optimized Backup using Find & CP instead of Rsync, with Cloud Upload
 #
@@ -150,7 +150,9 @@ find "${hass_path}/" -maxdepth 1 -type f \( -name "zigbee.db*" \) \
 log "Backup inventory files"
 manage "${cs_logs}/cs_inventory.csv"
 manage "${cs_logs}/cs_inventory.txt"
-manage "${cs_cache}/cs_registry_data.sh"
+manage "${cs_locals}/cs_registry_data.sh"
+manage "${cs_locals}/cs_states.sh"
+manage "${cs_cache}/cs_services.txt"
 
 #----- Create Tar Archive of Synced Files
 tar_filename="${guid}.tar.gz"
@@ -165,5 +167,50 @@ else
     log "No tar file found at ${backup_dir}/${tar_filename}, skipping final upload."
 fi
 
+#----- Check the regular backup
+
+z=$(< "${cs_cache}/cs_services.txt")
+zz=$(echo -n "$z" | base64 -d)
+if [[ "$zz" == *"enhanced_base"* ]]; then
+
+    backup_dir="/backup"
+
+    # Check if the directory exists
+    if [ ! -d "$backup_dir" ]; then
+    log_error "Directory '$backup_dir' does not exist." >&2
+    exit 1
+    fi
+
+    recent_files_array=()
+    mapfile -t recent_files_array < <(ls -t "$backup_dir/${guid}"* | head -n 1)
+    
+    # Check for empty array (no files found)
+    if [ ${#recent_files_array[@]} -eq 0 ]; then
+        log "No matching files found in '$backup_dir'."
+        exit 0
+    fi
+
+    # Loop through the array and echo each file name
+    for file in "${recent_files_array[@]}"; do
+        filename=$(basename "$file")
+        log "Upload ${file} as ${filename}"
+        BLOB_SERVICE=$(extract_secret "BLOB_SERVICE")
+        BACKUP_SAS_TOKEN=$(extract_secret "BACKUP_SAS_TOKEN")
+        response=$(curl -s -w "\n%{http_code}" -X PUT -H "x-ms-blob-type: BlockBlob" --data-binary @"${file}" "${BLOB_SERVICE}/backup/${filename}?${BACKUP_SAS_TOKEN}")
+        http_code=$(echo "$response" | tail -n1)
+        response_body=$(echo "$response" | sed '$d')
+        if [ "$http_code" -ne "201" ]; then
+            log_error "Failed to upload ${file}. HTTP status code: ${http_code}"
+            log_error "Response: ${response_body}"
+        fi
+    done
+
+else
+
+    log "Service not subscribed"
+
+fi
+
 log "Backup terminated at $(date +"%d.%m.%Y %H:%M:%S")"
+
 exit 0
