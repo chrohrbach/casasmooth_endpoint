@@ -71,7 +71,7 @@
     while [[ "$#" -gt 0 ]]; do
         case "$1" in
             --log)
-                log=true
+                logger=true
                 forward_args+=("$1") 
                 shift
                 ;;
