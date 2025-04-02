@@ -2,20 +2,36 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.10.9
+# Version: 0.2.10.11
 #
-# Launches local or remote update of casasmooth
+# Launches local or remote update of casasmooth 
 #
-#=================================== Update the repository to make sure that we run the last version
+#=================================== Update the git repo to make sure that we run the last version, restart the script if needed
 
     cd "/config/casasmooth" >/dev/null 2>&1
     temp_log="$(basename ${0%.*}).log"
-    : > "${temp_log}"
+
+    if [[ -z "$SCRIPT_RESTARTED" ]]; then
+        : > "${temp_log}" 
+    fi
+
     trace() { 
         printf "%s %s: $1\n" "$0" "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "${temp_log}"
     }
+
+    timestamp_before=$(stat -c %Y "$(basename ${0})" 2>/dev/null)
     trace "Updating casasmooth sources"
     git fetch origin main && git reset --hard origin/main 2>&1
+    timestamp_after=$(stat -c %Y "$(basename ${0})" 2>/dev/null)
+
+    if [[ "$timestamp_before" -lt "$timestamp_after" ]]; then
+        export SCRIPT_RESTARTED=true
+        trace "$(basename ${0}) source has been updated, restarting the script"
+        exec "./$(basename ${0})" "$@"
+        trace "CRITICAL: Failed to restart $(basename ${0%.*})"
+        exit 0
+    fi
+
     chmod +x commands/*.sh >/dev/null 2>&1
 
 #=================================== Include cs_library

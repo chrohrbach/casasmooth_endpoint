@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.2.6
+# Version: 1.2.7
 #
 # Optimized Backup using Find & CP instead of Rsync, with Cloud Upload
 #
@@ -15,6 +15,7 @@
 #===================================
 
 verbose=true
+logger=true
 
 log "IMPORTANT: Backup will only work if a correct plan is enabled for this GUID. Backend will reject the file otherwise."
 
@@ -128,23 +129,24 @@ find "${hass_path}/" -maxdepth 1 -type f \( -name "*.yaml" \) \
     -exec cp --parents {} "${backup_dir}" \; \
     || log "Failed to copy HASS YAML files"
 
+#----- Copy Zigbee db from "$hass_path' separately
+log "Copying zigbee db"
+find "${hass_path}/" -maxdepth 1 -type f \( -name "zigbee.db*" \) \
+    -exec cp --parents {} "${backup_dir}" \; \
+    || log "Failed to copy Zigbee registry files"
+
 #----- Copy Log files from `$hass_path`
 log "Copying hass relevant files"
 find "${hass_path}/" -maxdepth 1 -type f \( -name "*.log" \) \
     -exec cp --parents {} "${backup_dir}" \; \
     || log "Failed to copy HASS log files"
 
-#----- Copy Home Assistant `.storage` registry files separately
+#----- Copy Home Assistant `.storage` files
 log "Copying hass registries"
-find "${hass_path}/.storage/" -type f \( -name "core.*" -o -name "person" -o -name "auth" -o -name "frontend*" -o -name "lovelace*"  -o -name "energy*" \) \
+#find "${hass_path}/.storage/" -type f \( -name "core.*" -o -name "person" -o -name "auth" -o -name "frontend*" -o -name "lovelace*"  -o -name "energy*" \) \
+find "${hass_path}/.storage/" -type f -name "*" \
     -exec cp --parents {} "${backup_dir}" \; \
-    || log "Failed to copy HASS registry files"
-
-#----- Copy Zigbee db files separately
-log "Copying zigbee db"
-find "${hass_path}/" -maxdepth 1 -type f \( -name "zigbee.db*" \) \
-    -exec cp --parents {} "${backup_dir}" \; \
-    || log "Failed to copy Zigbee registry files"
+    || log "Failed to copy HASS .storage files"
 
 #----- Backup isolated files
 log "Backup inventory files"
@@ -153,58 +155,68 @@ manage "${cs_logs}/cs_inventory.txt"
 manage "${cs_locals}/cs_registry_data.sh"
 manage "${cs_locals}/cs_states.sh"
 manage "${cs_cache}/cs_services.txt"
+manage "${cs_logs}/cs_update_casasmooth.log"
+manage "${cs_logs}/cs_update_client.log"
+manage "${cs_path}/cs_update.log"
 
 #----- Create Tar Archive of Synced Files
 tar_filename="${guid}.tar.gz"
 log "Creating tar archive ${backup_dir}/${tar_filename}..."
 tar -czf "${backup_dir}/${tar_filename}" -C "${backup_dir}/config/" . || log "Failed to create tar file"
 
-#----- Upload Tar Archive to Cloud
-if [[ -f "${backup_dir}/${tar_filename}" ]]; then
-    log "Backup completed: ${tar_filename}, send to cloud"
-    manage "${backup_dir}/${tar_filename}"
-else
-    log "No tar file found at ${backup_dir}/${tar_filename}, skipping final upload."
-fi
-
-#----- Check the regular backup
-
 z=$(< "${cs_cache}/cs_services.txt")
 zz=$(echo -n "$z" | base64 -d)
+
+#----- Upload Tar Archive to Cloud
+if [[ "$zz" == *"enhanced_base"* ]]; then
+    if [[ -f "${backup_dir}/${tar_filename}" ]]; then
+        log "Backup completed: ${tar_filename}, send to cloud"
+        manage "${backup_dir}/${tar_filename}"
+    else
+        log "No tar file found at ${backup_dir}/${tar_filename}, skipping final upload."
+    fi
+fi
+
+#----- Check the regular backup ($$$$ /backup is not accessible from a sub process this does not work $$$$)
+
 if [[ "$zz" == *"enhanced_base"* ]]; then
 
     backup_dir="/backup"
 
     # Check if the directory exists
     if [ ! -d "$backup_dir" ]; then
-    log_error "Directory '$backup_dir' does not exist." >&2
-    exit 1
-    fi
 
-    recent_files_array=()
-    mapfile -t recent_files_array < <(ls -t "$backup_dir/${guid}"* | head -n 1)
-    
-    # Check for empty array (no files found)
-    if [ ${#recent_files_array[@]} -eq 0 ]; then
-        log "No matching files found in '$backup_dir'."
-        exit 0
-    fi
+        log "Directory '$backup_dir' does not exist."
 
-    # Loop through the array and echo each file name
-    for file in "${recent_files_array[@]}"; do
-        filename=$(basename "$file")
-        log "Upload ${file} as ${filename}"
-        BLOB_SERVICE=$(extract_secret "BLOB_SERVICE")
-        BACKUP_SAS_TOKEN=$(extract_secret "BACKUP_SAS_TOKEN")
-        response=$(curl -s -w "\n%{http_code}" -X PUT -H "x-ms-blob-type: BlockBlob" --data-binary @"${file}" "${BLOB_SERVICE}/backup/${filename}?${BACKUP_SAS_TOKEN}")
-        http_code=$(echo "$response" | tail -n1)
-        response_body=$(echo "$response" | sed '$d')
-        if [ "$http_code" -ne "201" ]; then
-            log_error "Failed to upload ${file}. HTTP status code: ${http_code}"
-            log_error "Response: ${response_body}"
+    else
+
+        recent_files_array=()
+        #mapfile -t recent_files_array < <(ls -t "$backup_dir/${guid}"* | head -n 1)
+        mapfile -t recent_files_array < <(ls -t "$backup_dir/????????.tar" | head -n 1)
+        
+        # Check for empty array (no files found)
+        if [ ${#recent_files_array[@]} -eq 0 ]; then
+            log "No matching files found in '$backup_dir'."
+            exit 0
         fi
-    done
 
+        # Loop through the array and echo each file name
+        for file in "${recent_files_array[@]}"; do
+            filename=$(basename "$file")
+            log "Upload ${file} as ${guid}-${filename}"
+            BLOB_SERVICE=$(extract_secret "BLOB_SERVICE")
+            BACKUP_SAS_TOKEN=$(extract_secret "BACKUP_SAS_TOKEN")
+            response=$(curl -s -w "\n%{http_code}" -X PUT -H "x-ms-blob-type: BlockBlob" --data-binary @"${file}" "${BLOB_SERVICE}/backup/${guid}-${filename}?${BACKUP_SAS_TOKEN}")
+            http_code=$(echo "$response" | tail -n1)
+            response_body=$(echo "$response" | sed '$d')
+            if [ "$http_code" -ne "201" ]; then
+                log_error "Failed to upload ${file}. HTTP status code: ${http_code}"
+                log_error "Response: ${response_body}"
+            fi
+        done
+
+    fi
+    
 else
 
     log "Service not subscribed"

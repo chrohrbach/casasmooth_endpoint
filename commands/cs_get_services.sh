@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.3
+# Version: 1.1.4
 #
 # Get the subscribed services from the cloud using a REST endpoint
 #
@@ -41,7 +41,10 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Write the content to the file
-echo "$services" > "${cs_path}/cache/cs_services.txt"
+# Check if the content is different before writing
+if [ "$services" != "$(cat "${cs_path}/cache/cs_services.txt" 2>/dev/null)" ]; then
+  # Write the content to the file
+  echo "$services" > "${cs_path}/cache/cs_services.txt"
+fi
 
 exit 0

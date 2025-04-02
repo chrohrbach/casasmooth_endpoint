@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.8
+# Version: 1.1.17.9
 #
 # Library function for casasmooth scripts
 #
@@ -340,20 +340,20 @@
     lib_update_status() {
         local json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.config" "${hass_path}/.storage/core.area_registry" "${hass_path}/.storage/core.device_registry" "${hass_path}/.storage/core.entity_registry" )
         local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" )
-        local sh_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
+        local code_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
         local json_date=$(date -d "@${json_timestamp}" "+%Y-%m-%d %H:%M:%S")
         local yaml_date=$(date -d "@${yaml_timestamp}" "+%Y-%m-%d %H:%M:%S")
-        local sh_date=$(date -d "@${sh_timestamp}" "+%Y-%m-%d %H:%M:%S")
+        local code_date=$(date -d "@${code_timestamp}" "+%Y-%m-%d %H:%M:%S")
         echo "File timestamps:"
         echo "  JSON: $json_date"
         echo "  YAML: $yaml_date"
-        echo "  SH:   $sh_date"
+        echo "  SH:   $code_date"
     }
     lib_update_required() {
         local json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.config" "${hass_path}/.storage/core.area_registry" "${hass_path}/.storage/core.device_registry" "${hass_path}/.storage/core.entity_registry" )
         local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" )
-        local sh_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" )
-        if [[ "$json_timestamp" -gt "$yaml_timestamp" || "$sh_timestamp" -gt "$yaml_timestamp" ]]; then
+        local code_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" "${cs_cache}/cs_service.txt" )
+        if [[ "$json_timestamp" -gt "$yaml_timestamp" || "$code_timestamp" -gt "$yaml_timestamp" ]]; then
             echo "true"
         else
             echo "false"
