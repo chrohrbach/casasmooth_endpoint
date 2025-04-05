@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.10.11
+# Version: 0.2.10.12
 #
 # Launches local or remote update of casasmooth 
 #
