@@ -342,7 +342,7 @@
         local json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.config" "${hass_path}/.storage/core.area_registry" "${hass_path}/.storage/core.device_registry" "${hass_path}/.storage/core.entity_registry" )
         local reg_timestamp=$(lib_get_newest_timestamp "${cs_locals}/cs_registry_data.sh" )
         local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" )
-        local code_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" "${cs_cache}/cs_service.txt" )
+        local code_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" "${cs_cache}/cs_service.txt" "${cs_lib}/cs_rules.csv" )
         if [[ "$json_timestamp" -gt "$reg_timestamp" || "$reg_timestamp" -gt "$yaml_timestamp" || "$code_timestamp" -gt "$yaml_timestamp" ]]; then
             echo "true"
         else
