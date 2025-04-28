@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.2.7
+# Version: 1.2.7.1
 #
 # Optimized Backup using Find & CP instead of Rsync, with Cloud Upload
 #
@@ -105,7 +105,7 @@ manage() {
     done
 }
 
-# Copy all files **excluding** backup, temp, and logs folders
+# Copy all files **excluding** backup, temp, etc folders
 log "Copying all casasmooth relevant files"
 find "${cs_path}/" -type d \( \
     -name ".*" -o \
@@ -116,7 +116,6 @@ find "${cs_path}/" -type d \( \
     -path "${cs_path}/backup" -o \
     -path "${cs_path}/resources" -o \
     -path "${cs_path}/temp" -o \
-    -path "${cs_path}/logs" -o \
     -path "${cs_path}/images" -o \
     -path "${cs_path}/medias" \
     \) -prune -o -type f \

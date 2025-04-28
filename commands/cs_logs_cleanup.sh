@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version 0.1.4
+# Version 0.1.5
 #
 # Cleanup logs
 #
@@ -16,8 +16,8 @@
 
 verbose=true
 
-# Cleaning function
-clean_directory() {
+# Cleaning function (recursive)
+clean_directory_recursive() {
   local dir="$1"
   local files_to_keep="$2"
 
@@ -27,12 +27,9 @@ clean_directory() {
     return 1
   fi
 
-  # Change to the directory
-  cd "$dir" || return 1
-
-  # List all files sorted by modification time (newest first), excluding directories
+  # Find all files (not directories) recursively, sort by modification time (newest first)
   local all_files
-  all_files=$(ls -tp | grep -v '/$')
+  all_files=$(find "$dir" -type f -printf '%T@ %p\n' | sort -nr | cut -d' ' -f2-)
 
   # Count the total number of files
   local total_files
@@ -43,7 +40,7 @@ clean_directory() {
 
   # Check if there are more files than the limit
   if [ "$files_to_delete_count" -le 0 ]; then
-    log "INFO" "No files to delete in $dir. Total files ($total_files) are within the limit ($files_to_keep)."
+    log "INFO" "No files to delete in $dir (recursive). Total files ($total_files) are within the limit ($files_to_keep)."
     return 0
   fi
 
@@ -52,22 +49,19 @@ clean_directory() {
   files_to_delete=$(echo "$all_files" | tail -n "$files_to_delete_count")
 
   # Delete the older files
-  log "INFO" "Deleting the following files in $dir:"
+  log "INFO" "Deleting the following files in $dir (recursive):"
   echo "$files_to_delete" | tee -a "$log_file"
   echo "$files_to_delete" | xargs rm --
 
-  log "INFO" "Cleanup complete in $dir. Kept the newest $files_to_keep files."
-
-  # Return to the original directory
-  cd - > /dev/null
+  log "INFO" "Cleanup complete in $dir (recursive). Kept the newest $files_to_keep files."
 }
 
 # Delete lock files to make sure that at least all 24h they get deleted
 rm -f "${cs_path}/*.lock"
 rm -f "${cs_logs}/*.lock"
 
-# Call the cleaning function
-clean_directory "${cs_logs}/logs/lighting" 10
-clean_directory "${cs_logs}/logs/sensors" 200
-clean_directory "${cs_logs}/logs/states" 20
-clean_directory "${hass_path}/www/snapshots" 50
+# Call the cleaning function (recursive)
+clean_directory_recursive "${cs_logs}/logs/lighting" 10
+clean_directory_recursive "${cs_logs}/logs/sensors" 200
+clean_directory_recursive "${cs_logs}/logs/states" 20
+clean_directory_recursive "${hass_path}/www/snapshots" 50

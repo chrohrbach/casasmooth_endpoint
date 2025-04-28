@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.10.12
+# Version: 0.2.10.14
 #
 # Launches local or remote update of casasmooth 
 #
@@ -82,6 +82,7 @@
     production=true
     cloud=true
     remoting=false
+    force_reload=false
 
     while [[ "$#" -gt 0 ]]; do
         case "$1" in
@@ -98,6 +99,10 @@
             --debug)
                 debug=true
                 forward_args+=("$1") 
+                shift
+                ;;
+            --reload)
+                force_reload=true
                 shift
                 ;;
             --remoting)
@@ -135,9 +140,9 @@
 
     if [[ "$remote_update" == "false" ]]; then
 
-        #----- We are on a system running HASS, we do a local update
+        #----- We are on a system running HASS, we do a local update  
 
-        if [[ "$(lib_update_required)" == "false" ]]; then
+        if [[ "$(lib_update_required)" == "false" && "${force_reload}" != "true" ]]; then
             trace "casasmooth local update is not required."
             exit 0
         else
