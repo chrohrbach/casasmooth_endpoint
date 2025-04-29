@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.1.3
+# Version: 0.1.3.1
 #
 # Reduce the size of the log
 # 
@@ -39,7 +39,7 @@ rm -rf "$TEMP_DIR"
 
 # Check if the Home Assistant DB exceeds 25GB
 DB_FILE="${hass_path}/home_assistant_v2.db"
-MAX_SIZE=$((25 * 1024 * 1024 * 1024))
+MAX_SIZE=$((15 * 1024 * 1024 * 1024))
 if [ -f "$DB_FILE" ]; then
     if command -v stat > /dev/null 2>&1; then
         DB_SIZE=$(stat -c%s "$DB_FILE")
