@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version 0.7.1
+# Version 0.7.2
 #
 # Log a sensor event in a daily JSON log file, CSV and Parquet with unit conversion
 #
@@ -34,7 +34,7 @@ guid="$9"
 
 #----- Prepare timestamp and log directories
 timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-log_dir="${cs_logs}/sensors/${device_class}"
+log_dir="${cs_logs}/sensors/${class_id}"
 mkdir -p "$log_dir"
 file_base="${log_dir}/$(date '+%Y%m%d%H0000')"
 csv_file="${file_base}.csv"
@@ -117,7 +117,7 @@ converted_unit=$(echo "$conversion_result" | cut -d';' -f2)
 
 #----- Write one CSV object per line (converted)
 cat <<EOF >> "$csv_file"
-$timestamp;$area_id;$class_id;$entity_id;$converted_state;$converted_unit;$device_class;$secs_interval
+$timestamp;$area_id;$class_id;$entity_id;$converted_state;$converted_unit;$device_class;$secs_interval;$guid
 EOF
 
 exit 0
