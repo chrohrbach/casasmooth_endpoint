@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.2.7.1
+# Version: 1.2.7.3
 #
 # Optimized Backup using Find & CP instead of Rsync, with Cloud Upload
 #
@@ -117,6 +117,7 @@ find "${cs_path}/" -type d \( \
     -path "${cs_path}/resources" -o \
     -path "${cs_path}/temp" -o \
     -path "${cs_path}/images" -o \
+    -path "${cs_path}/notebooks/sensors" -o \
     -path "${cs_path}/medias" \
     \) -prune -o -type f \
     -exec cp --parents {} "${backup_dir}" \; \
@@ -143,8 +144,7 @@ find "${hass_path}/" -maxdepth 1 -type f \( -name "*.log" \) \
 #----- Copy Home Assistant `.storage` files
 log "Copying hass registries"
 #find "${hass_path}/.storage/" -type f \( -name "core.*" -o -name "person" -o -name "auth" -o -name "frontend*" -o -name "lovelace*"  -o -name "energy*" \) \
-find "${hass_path}/.storage/" -type f -name "*" \
-    -exec cp --parents {} "${backup_dir}" \; \
+find "${hass_path}/.storage/" -type f -exec cp --parents --force {} "${backup_dir}" \; \
     || log "Failed to copy HASS .storage files"
 
 #----- Backup isolated files
