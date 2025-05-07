@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.5.4
+# Version: 1.1.5.5
 #
 # Register the system and various infos using a REST endpoint
 #
@@ -41,8 +41,8 @@ fi
 log "Collecting data..."
 
 trackers=""
-if [[ -t reg_device_trackers && ${#reg_device_trackers[@]} -gt 0 ]]; then
-    for tracker in "${reg_device_trackers[@]}"; do
+if [[ -t global_mobile_trackers && ${#global_mobile_trackers[@]} -gt 0 ]]; then
+    for tracker in "${global_mobile_trackers[@]}"; do
         trackers="${trackers}${tracker};"
     done
 fi
