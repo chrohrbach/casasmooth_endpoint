@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.3
+# Version: 1.1.5
 #
 # Read news from Google News, clean it up, and save it to cache
 #
@@ -16,7 +16,7 @@ fi
 
 # Define output files
 rss_file="${cs_cache}/news.xml"
-output_file="${cs_cache}/news.txt"
+output_file="${hass_path}/www/news.txt"
 
 current_language=$(jq -r '.data.language // "en"' "${hass_path}/.storage/core.config" 2>/dev/null)
 if [[ -z "$current_language" ]]; then
@@ -36,7 +36,7 @@ if [ ! -s "$rss_file" ]; then
     exit 1
 fi
 
-# Extract and clean news articles
+# Extract and clean news articles, output as plain text
 awk '
 BEGIN { RS="</item>"; FS="<title>|</title>|<description>|</description>" }
 {
@@ -56,8 +56,7 @@ BEGIN { RS="</item>"; FS="<title>|</title>|<description>|</description>" }
 
     # Skip first unwanted title
     if (title != "À la une - Google Actualités" && title != "") {
-        print "**"title"**" "\n"
-        print description "\n"
+        print title "\n" description "\n"
     }
 }' "$rss_file" > "$output_file"
 
