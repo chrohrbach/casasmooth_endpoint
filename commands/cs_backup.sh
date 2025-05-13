@@ -115,6 +115,7 @@ find "${cs_path}/" -type d \( \
     -path "${cs_path}/.vscode" -o \
     -path "${cs_path}/backup" -o \
     -path "${cs_path}/resources" -o \
+    -path "${cs_path}/custom_components" -o \
     -path "${cs_path}/temp" -o \
     -path "${cs_path}/images" -o \
     -path "${cs_path}/notebooks/sensors" -o \

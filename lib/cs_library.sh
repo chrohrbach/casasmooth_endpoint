@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.10
+# Version: 1.1.17.12
 #
 # Library function for casasmooth scripts
 #
@@ -197,10 +197,11 @@
         cs_lib="${cs_path}/lib"
         cs_logs="${cs_path}/logs"
         cs_resources="${cs_path}/resources"
+        cs_custom_components="${cs_path}/custom_components"
         cs_medias="${cs_path}/medias"
         cs_locals="${cs_path}/locals"
 
-        mkdir -p "$cs_cache" "$cs_temp" "$cs_templates" "$cs_dashboards" "$cs_images" "$cs_medias" "$cs_resources" "$cs_commands" "$cs_etc" "$cs_lib" "$cs_logs" "$cs_locals"
+        mkdir -p "$cs_cache" "$cs_temp" "$cs_templates" "$cs_dashboards" "$cs_images" "$cs_medias" "$cs_resources" "$cs_custom_components" "$cs_commands" "$cs_etc" "$cs_lib" "$cs_logs" "$cs_locals"
 
         # May change! Should not!
         log_file="${cs_logs}/${script_name}.log"
@@ -400,3 +401,46 @@
 
     }
 
+#----- Icon function that returns a icon based on the name
+    lib_area_icon() {
+        local name="$1"
+        local icon=""
+        case "${name}" in
+            *"ureau"* | *"ffice"* | *"uro"*) icon="mdi:desk" ;;
+            *"uisine"* | *"itchen"*) icon="mdi:stove" ;;
+            *"anger"* | *"ating"* | *"essen"*) icon="mdi:silverware-fork-knife" ;;
+            *"alon"* | *"iving"* | *"esting"*) icon="mdi:sofa" ;;
+            *"escal"* | *"stair"* | *"treppe"*) icon="mdi:stairs" ;;
+            *"ouloir"* | *"allwa"* | *"orridor"*) icon="mdi:walk" ;;
+            *"hambre"* | *"edroom"*) icon="mdi:bed" ;;
+            *"oilet"* | *"wc"*) icon="mdi:toilet" ;;
+            *"elevision"* | *"élévis"* | *"ultim"*) icon="mdi:television" ;;
+            *"ain"* | *"ath"* | *"aderaum"* | *"ouche"* | *"hower"* | *"usche"*) icon="mdi:shower" ;;
+            *"ntrée"* | *"ntry"* | *"ntrance"* | *"ingang"*) icon="mdi:door" ;;
+            *"ortail"* | *"ate"*) icon="mdi:gate" ;;
+            *"ardin"* | *"arden"* | *"arten"* | *"extérieur"* | *"outside"*) icon="mdi:tree" ;;
+            *"iscin"* | *"ool"*) icon="mdi:pool" ;;
+            *"arage"*) icon="mdi:garage" ;;
+            *"ave"* | *"ellar"* | *"eller"*) icon="mdi:home-floor-negative-1" ;;
+            *"oiture"* | *"car"* | *"auto"* | *"lkw"*) icon="mdi:car" ;;
+            *) icon="mdi:seat" ;;
+        esac
+        echo "$icon"
+    }
+
+#----- Icon function that returns a icon based on the name
+    lib_area_image() {
+        local area_name="$1"
+        local area_picture="$2"
+        local image="https://demo.home-assistant.io/stub_config/kitchen.png"
+        if [[ -n "$area_picture" && "$area_picture" != "null" ]]; then
+            image="${area_picture}"
+        elif [ -f "../www/${area_name}.png" ]; then
+            image="/local/images/${area_name}.png"
+        elif [ -f "../www/${area_name}.jpg" ]; then
+            image="/local/images/${area_name}.jpg"
+        elif [ -f "../www/cs_${area_name}.jpg" ]; then
+            image="/local/images/cs_${area_name}.jpg"
+        fi
+        echo "$image"
+    }

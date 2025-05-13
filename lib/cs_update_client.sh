@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.1.2.4
+# Version: 0.1.2.5
 #
 # This script is the client part of the remote update process. 
 # This has been separated from the main cs_update due to 60s timeout that 
@@ -394,6 +394,9 @@
 
     # Copy custom cards
     safe_copy "${cs_resources}" "${hass_path}/www/community"
+
+    # Copy custom components
+    safe_copy "${cs_custom_components}" "${hass_path}"
 
     # Copy images
     mkdir -p "${cs_path}/images"
