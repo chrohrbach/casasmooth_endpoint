@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version 1.5.2
+# Version 1.5.3.1
 #
 # Send SMS using Swisscom service
 #
@@ -14,15 +14,17 @@
     fi
 #===================================
 
+verbose=true
+
 #----- Parameter Validation -----
 if [ "$#" -ne 3 ]; then
-    log_error "Usage: $0 <from_phone_number> <to_phone_number> <message_text>"
-    log_error "Please provide exactly three arguments: from phone number, to phone number, and message text."
+    log "Usage: $0 <from_phone_number> <to_phone_number> <message_text>"
+    log "Please provide exactly three arguments: from phone number, to phone number, and message text."
     exit 1
 fi
 
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
-    log_error "Error: All parameters (from_phone_number, to_phone_number, message_text) must be provided and not empty."
+    log "Error: All parameters (from_phone_number, to_phone_number, message_text) must be provided and not empty."
     exit 1
 fi
 
@@ -46,23 +48,40 @@ token_cache_file="${cs_path}/cache/token_cache.txt"
 
 # Validate and normalize phone number (E.164 format)
 validate_phone_number() {
-    local number="$1"
+    local number_input_raw="$1" # Keep original input for logging purposes
+    local number_cleaned
     local normalized_number
 
     # Remove any spaces, dashes, dots, or parentheses from the input number before normalization
-    number=$(sed 's/[[:space:][dash][dot][parenth]]//g' <<< "$number")
+    # Note: The sed pattern '[[:space:][dash][dot][parenth]]' might be non-standard
+    # or rely on specific shell variable definitions for 'dash', 'dot', 'parenth'.
+    # A more portable version might be: sed 's/[[:space:].()-]//g'
+    # For now, using the provided version.
+    number_cleaned=$(sed 's/[[:space:][dash][dot][parenth]]//g' <<< "$number_input_raw")
 
-    # Check if the number starts with '00' and replace it with '+'
-    if [[ "$number" =~ ^00 ]]; then
-        normalized_number="+${number:2}"
+    # Apply new normalization rules:
+    # - starting with one "+" gets converted to "00"
+    # - starting with a single "0" (not "00") gets converted to "0041"
+    if [[ "$number_cleaned" =~ ^\+ ]]; then
+        # Starts with "+", convert to "00"
+        normalized_number="00${number_cleaned:1}"
+    elif [[ "$number_cleaned" =~ ^00 ]]; then
+        # Starts with "00", keep as is (already in desired prefix format for API)
+        normalized_number="$number_cleaned"
+    elif [[ "$number_cleaned" =~ ^0 ]]; then # Catches "0" but not "00" due to previous elif
+        # Starts with a single "0", convert to "0041" (assuming Swiss context for '0' prefix)
+        normalized_number="0041${number_cleaned:1}"
     else
-        normalized_number="$number"
+        # No specific prefix rule matched (+, 00, 0). Pass as is.
+        # Validation below will check if it's in the required 00... format.
+        normalized_number="$number_cleaned"
     fi
 
-    # Validate the normalized number against E.164 format
-    # E.164: '+' followed by country code (1-3 digits), then subscriber number (variable length)
-    # Relaxed the regex to allow for slightly more variation in subscriber number length after country code
-    if [[ ! "$normalized_number" =~ ^\+[1-9][0-9]{1,14}$ ]]; then
+    # Validate the normalized number: should be "00" followed by country code and subscriber number.
+    # Example: 0041791234567. The part after "00" (country code + subscriber number)
+    # should be 2-15 digits long, with the country code starting with a digit from 1-9.
+    if [[ ! "$normalized_number" =~ ^00[1-9][0-9]{1,14}$ ]]; then
+        log_error "Error: Phone number '$number_input_raw' (processed to '$normalized_number') is not in the expected format (e.g., 0041791234567)."
         return 1 # Indicate failure
     fi
 
@@ -70,7 +89,6 @@ validate_phone_number() {
     echo "$normalized_number"
     return 0 # Indicate success
 }
-
 
 # Validate message length (assuming max 160 characters)
 validate_message_length() {
@@ -94,7 +112,6 @@ to=$(validate_phone_number "$to_input")
 if [ $? -ne 0 ]; then
     exit 1
 fi
-
 
 # Validate message length
 validate_message_length "$text"
@@ -231,4 +248,3 @@ valid_access_token=$(get_valid_access_token)
 # Send the SMS with retry logic
 send_sms_with_retries "$valid_access_token"
 
-#----- End of Script

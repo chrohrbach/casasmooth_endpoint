@@ -404,27 +404,29 @@
 #----- Icon function that returns a icon based on the name
     lib_area_icon() {
         local name="$1"
-        local icon=""
-        case "${name}" in
-            *"ureau"* | *"ffice"* | *"uro"*) icon="mdi:desk" ;;
-            *"uisine"* | *"itchen"*) icon="mdi:stove" ;;
-            *"anger"* | *"ating"* | *"essen"*) icon="mdi:silverware-fork-knife" ;;
-            *"alon"* | *"iving"* | *"esting"*) icon="mdi:sofa" ;;
-            *"escal"* | *"stair"* | *"treppe"*) icon="mdi:stairs" ;;
-            *"ouloir"* | *"allwa"* | *"orridor"*) icon="mdi:walk" ;;
-            *"hambre"* | *"edroom"*) icon="mdi:bed" ;;
-            *"oilet"* | *"wc"*) icon="mdi:toilet" ;;
-            *"elevision"* | *"élévis"* | *"ultim"*) icon="mdi:television" ;;
-            *"ain"* | *"ath"* | *"aderaum"* | *"ouche"* | *"hower"* | *"usche"*) icon="mdi:shower" ;;
-            *"ntrée"* | *"ntry"* | *"ntrance"* | *"ingang"*) icon="mdi:door" ;;
-            *"ortail"* | *"ate"*) icon="mdi:gate" ;;
-            *"ardin"* | *"arden"* | *"arten"* | *"extérieur"* | *"outside"*) icon="mdi:tree" ;;
-            *"iscin"* | *"ool"*) icon="mdi:pool" ;;
-            *"arage"*) icon="mdi:garage" ;;
-            *"ave"* | *"ellar"* | *"eller"*) icon="mdi:home-floor-negative-1" ;;
-            *"oiture"* | *"car"* | *"auto"* | *"lkw"*) icon="mdi:car" ;;
-            *) icon="mdi:seat" ;;
-        esac
+        local icon="$2"
+        if [[ "$icon" == "" || "$icon" == "null" ]]; then
+            case "${name}" in
+                *"ureau"* | *"ffice"* | *"uro"*) icon="mdi:desk" ;;
+                *"uisine"* | *"itchen"*) icon="mdi:stove" ;;
+                *"anger"* | *"ating"* | *"essen"*) icon="mdi:silverware-fork-knife" ;;
+                *"alon"* | *"iving"* | *"esting"*) icon="mdi:sofa" ;;
+                *"escal"* | *"stair"* | *"treppe"*) icon="mdi:stairs" ;;
+                *"ouloir"* | *"allwa"* | *"orridor"*) icon="mdi:walk" ;;
+                *"hambre"* | *"edroom"*) icon="mdi:bed" ;;
+                *"oilet"* | *"wc"*) icon="mdi:toilet" ;;
+                *"elevision"* | *"élévis"* | *"ultim"*) icon="mdi:television" ;;
+                *"ain"* | *"ath"* | *"aderaum"* | *"ouche"* | *"hower"* | *"usche"*) icon="mdi:shower" ;;
+                *"ntrée"* | *"ntry"* | *"ntrance"* | *"ingang"*) icon="mdi:door" ;;
+                *"ortail"* | *"ate"*) icon="mdi:gate" ;;
+                *"ardin"* | *"arden"* | *"arten"* | *"extérieur"* | *"outside"*) icon="mdi:tree" ;;
+                *"iscin"* | *"ool"*) icon="mdi:pool" ;;
+                *"arage"*) icon="mdi:garage" ;;
+                *"ave"* | *"ellar"* | *"eller"*) icon="mdi:home-floor-negative-1" ;;
+                *"oiture"* | *"car"* | *"auto"* | *"lkw"*) icon="mdi:car" ;;
+                *) icon="mdi:seat" ;;
+            esac
+        fi
         echo "$icon"
     }
 
