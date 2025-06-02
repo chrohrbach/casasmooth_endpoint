@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.5.5
+# Version: 1.1.5.6
 #
 # Register the system and various infos using a REST endpoint
 #
@@ -89,6 +89,18 @@ supervisor=$(ha info | grep "supervisor:" | awk '{print $2}')
 docker=$(ha info | grep "docker:" | awk '{print $2}')
 addons=$(ha addons list)
 
+# Verify the mode we are running in, if there is no lib/cs_update_casasmooth.sh file its endpoint, if there is no internals/cs_services.json we are release mode, otherwise in development mode
+if [[ ! -f "${cs_path}/lib/cs_update_casasmooth.sh" ]]; then
+    log "Running in endpoint mode."
+    casasmooth_runtime="endpoint"
+elif [[ ! -f "${cs_path}/internals/cs_services.json" ]]; then
+    log "Running in release mode."
+    casasmooth_runtime="release"
+else
+    log "Running in development mode."
+    casasmooth_runtime="development"
+fi
+
 backup="https://teleia.sharepoint.com/sites/casasmooth/Configurations/Forms/AllItems.aspx?id=%2Fsites%2Fcasasmooth%2FConfigurations%2F${guid}%2Fbackups"
 
 if [ -z "$email" ]; then
@@ -126,6 +138,7 @@ json_payload=$(jq -n \
     --arg cs_restart_timestamp "${cs_restart_timestamp:-}" \
     --arg cs_base_url "${cs_base_url:-}" \
     --arg casasmooth_version "${casasmooth_version:-}" \
+    --arg casasmooth_runtime "${casasmooth_runtime:-}" \
     --arg update_version "${update_version:-}" \
     --arg update_timestamp "${update_timestamp:-}" \
     '{ 
@@ -154,6 +167,7 @@ json_payload=$(jq -n \
         cs_restart_timestamp: $cs_restart_timestamp,
         cs_base_url: $cs_base_url,
         casasmooth_version: $casasmooth_version,
+        casasmooth_runtime: $casasmooth_runtime,
         update_version: $update_version,
         update_timestamp: $update_timestamp
     }'

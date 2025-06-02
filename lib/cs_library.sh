@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.12
+# Version: 1.1.17.14
 #
 # Library function for casasmooth scripts
 #
@@ -223,19 +223,30 @@
         local src="$1"
         local dest="$2"
 
+        # Prevent copying a directory into itself
+        if [[ -d "$src" && "$dest" == "$src" ]]; then
+            log_error "Cannot copy directory '$src' into itself."
+            return 1
+        fi
+        # Prevent copying a file onto itself
+        if [[ -f "$src" && "$dest" == "$src" ]]; then
+            log_error "Cannot copy file '$src' onto itself."
+            return 1
+        fi
+
         # Check if the source exists and whether it is a directory or a file.
         if [[ -d "$src" ]]; then
-            # Source is a directory: copy recursively.
-            if cp -r "$src" "$dest"; then
-                log_info "Successfully copied directory '$src' to '$dest'."
+            # Source is a directory: copy recursively and preserve attributes.
+            if cp -a "$src" "$dest"; then
+                log_debug "Successfully copied directory '$src' to '$dest' (preserving attributes)."
             else
                 log_error "Failed to copy directory '$src' to '$dest'."
                 return 1
             fi
         elif [[ -f "$src" ]]; then
             # Source is a file: perform a standard copy.
-            if cp "$src" "$dest"; then
-                log_info "Successfully copied file '$src' to '$dest'."
+            if cp -p "$src" "$dest"; then
+                log_debug "Successfully copied file '$src' to '$dest' (preserving attributes)."
             else
                 log_error "Failed to copy file '$src' to '$dest'."
                 return 1
