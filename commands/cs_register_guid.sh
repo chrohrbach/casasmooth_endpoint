@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.5.6
+# Version: 1.1.7.1
 #
 # Register the system and various infos using a REST endpoint
 #
@@ -12,6 +12,9 @@
         echo "ERROR: Failed to source ${include}"
         exit 1
     fi
+#=================================== Include cs_registry
+    include_source "${cs_lib}/cs_registry.sh"
+    include_source "${cs_locals}/cs_registry_data.sh"
 #===================================
 
 verbose=true
@@ -89,6 +92,38 @@ supervisor=$(ha info | grep "supervisor:" | awk '{print $2}')
 docker=$(ha info | grep "docker:" | awk '{print $2}')
 addons=$(ha addons list)
 
+# Count elements in each global array and assign directly to variables
+area_ids="${#global_area_ids[@]}"
+entity_ids="${#global_entity_ids[@]}"
+lights="${#global_lights[@]}"
+bulbs="${#global_bulbs[@]}"
+cameras="${#global_cameras[@]}"
+frigate_cameras="${#global_frigate_cameras[@]}"
+climates="${#global_climates[@]}"
+heaters="${#global_heaters[@]}"
+power_consumption_sensors="${#global_power_consumption_sensors[@]}"
+switches="${#global_switches[@]}"
+temperature_sensors="${#global_temperature_sensors[@]}"
+humidity_sensors="${#global_humidity_sensors[@]}"
+illuminance_sensors="${#global_illuminance_sensors[@]}"
+motion_sensors="${#global_motion_sensors[@]}"
+occupancy_sensors="${#global_occupancy_sensors[@]}"
+co2_sensors="${#global_co2_sensors[@]}"
+pm1_sensors="${#global_pm1_sensors[@]}"
+pm4_sensors="${#global_pm4_sensors[@]}"
+pm10_sensors="${#global_pm10_sensors[@]}"
+pm25_sensors="${#global_pm25_sensors[@]}"
+open_sensors="${#global_open_sensors[@]}"
+buttons="${#global_buttons[@]}"
+dimmers="${#global_dimmers[@]}"
+
+# Combined counts (without _count suffix)
+lights_and_bulbs=$((lights + bulbs))
+cameras_and_frigate=$((cameras + frigate_cameras))
+climates_and_heaters=$((climates + heaters))
+buttons_and_dimmers=$((buttons + dimmers))
+sensors=$((temperature_sensors + humidity_sensors + illuminance_sensors + motion_sensors + occupancy_sensors + co2_sensors + pm1_sensors + pm4_sensors + pm10_sensors + pm25_sensors + open_sensors))
+
 # Verify the mode we are running in, if there is no lib/cs_update_casasmooth.sh file its endpoint, if there is no internals/cs_services.json we are release mode, otherwise in development mode
 if [[ ! -f "${cs_path}/lib/cs_update_casasmooth.sh" ]]; then
     log "Running in endpoint mode."
@@ -141,6 +176,15 @@ json_payload=$(jq -n \
     --arg casasmooth_runtime "${casasmooth_runtime:-}" \
     --arg update_version "${update_version:-}" \
     --arg update_timestamp "${update_timestamp:-}" \
+    --arg area_ids "${area_ids:-}" \
+    --arg entity_ids "${entity_ids:-}" \
+    --arg lights_and_bulbs "${lights_and_bulbs:-}" \
+    --arg cameras_and_frigate "${cameras_and_frigate:-}" \
+    --arg climates_and_heaters "${climates_and_heaters:-}" \
+    --arg buttons_and_dimmers "${buttons_and_dimmers:-}" \
+    --arg sensors "${sensors:-}" \
+    --arg global_power_consumption_sensors "${global_power_consumption_sensors:-}" \
+    --arg switches "${switches:-}" \
     '{ 
         guid: $guid,
         email: $email,
@@ -169,7 +213,16 @@ json_payload=$(jq -n \
         casasmooth_version: $casasmooth_version,
         casasmooth_runtime: $casasmooth_runtime,
         update_version: $update_version,
-        update_timestamp: $update_timestamp
+        update_timestamp: $update_timestamp,
+        area_ids: $area_ids,
+        entity_ids: $entity_ids,
+        lights_and_bulbs: $lights_and_bulbs,
+        cameras_and_frigate: $cameras_and_frigate,
+        climates_and_heaters: $climates_and_heaters,
+        buttons_and_dimmers: $buttons_and_dimmers,
+        sensors: $sensors,
+        global_power_consumption_sensors: $global_power_consumption_sensors,
+        switches: $switches
     }'
 )
 
@@ -180,9 +233,7 @@ echo "$json_payload" > "$temp_file"
 log_debug "$json_payload"
 
 # Send the payload safely
-response=$(curl --silent --write-out "%{http_code}" --header "Content-Type: application/json" --data @"$temp_file" "$endpoint_url")
-
-http_code=$(echo "$response" | tail -n1)
+http_code=$(curl --silent --output /dev/null --write-out "%{http_code}" --header "Content-Type: application/json" --data @"$temp_file" "$endpoint_url")
 
 if [ "$http_code" -ne 202 ]; then
     log_error "Failed to upload payload. HTTP status code: $http_code"
