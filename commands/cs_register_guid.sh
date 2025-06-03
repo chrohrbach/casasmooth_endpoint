@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.7.1
+# Version: 1.1.7.2
 #
 # Register the system and various infos using a REST endpoint
 #
@@ -183,7 +183,7 @@ json_payload=$(jq -n \
     --arg climates_and_heaters "${climates_and_heaters:-}" \
     --arg buttons_and_dimmers "${buttons_and_dimmers:-}" \
     --arg sensors "${sensors:-}" \
-    --arg global_power_consumption_sensors "${global_power_consumption_sensors:-}" \
+    --arg power_consumption_sensors "${power_consumption_sensors:-}" \
     --arg switches "${switches:-}" \
     '{ 
         guid: $guid,
@@ -221,7 +221,7 @@ json_payload=$(jq -n \
         climates_and_heaters: $climates_and_heaters,
         buttons_and_dimmers: $buttons_and_dimmers,
         sensors: $sensors,
-        global_power_consumption_sensors: $global_power_consumption_sensors,
+        power_consumption_sensors: $power_consumption_sensors,
         switches: $switches
     }'
 )
