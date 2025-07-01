@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 0.2.10.14
+# Version: 0.2.10.15
 #
 # Launches local or remote update of casasmooth 
 #
@@ -82,7 +82,6 @@
     production=true
     cloud=true
     remoting=false
-    force_reload=false
 
     while [[ "$#" -gt 0 ]]; do
         case "$1" in
@@ -103,6 +102,12 @@
                 ;;
             --reload)
                 force_reload=true
+                forward_args+=("$1") 
+                shift
+                ;;
+            --reduce)
+                reduced_update=true
+                forward_args+=("$1") 
                 shift
                 ;;
             --remoting)

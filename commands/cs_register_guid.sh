@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.7.2
+# Version: 1.1.7.3
 #
 # Register the system and various infos using a REST endpoint
 #
@@ -54,7 +54,7 @@ fi
 file_path="${cs_locals}/cs_states.yaml"
 cs_restart_timestamp=$(extract_key "$file_path" "cs_restart_timestamp")
 cs_base_url=$(extract_key "$file_path" "cs_base_url")
-cs_user_mail=$(extract_key "$file_path" "cs_user_mail")
+cs_user_email=$(extract_key "$file_path" "cs_user_email")
 casasmooth_version=$(extract_key "$file_path" "casasmooth_version")
 update_version=$(extract_key "$file_path" "update_version")
 update_timestamp=$(extract_key "$file_path" "update_timestamp")

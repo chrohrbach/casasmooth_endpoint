@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.14
+# Version: 1.1.17.15
 #
 # Library function for casasmooth scripts
 #
@@ -67,8 +67,27 @@
 
     # Default logging configurations
     logger=false
+    export logger
     debug=false
+    export debug
     verbose=false
+    export verbose
+    
+    # Default settings
+    force_reload=false
+    export force_reload
+    reduced_update=false
+    export reduced_update
+    install_generated_code=true
+    export install_generated_code
+    translate=true
+    export translate
+    virtuals=false
+    export virtuals
+    cleanup=false
+    export cleanup
+    test_mode=false
+    export test_mode
 
     # Predefined log level prefixes
     declare -A LOG_PREFIX=(
@@ -351,11 +370,31 @@
     }
 
     lib_update_required() {
-        local json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.config" "${hass_path}/.storage/core.area_registry" "${hass_path}/.storage/core.device_registry" "${hass_path}/.storage/core.entity_registry" )
+        local base_json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.config" "${hass_path}/.storage/core.area_registry" )
+        local device_json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.device_registry" )
+        local entity_json_timestamp=$(lib_get_newest_timestamp "${hass_path}/.storage/core.entity_registry" )
         local reg_timestamp=$(lib_get_newest_timestamp "${cs_locals}/cs_registry_data.sh" )
         local yaml_timestamp=$(lib_get_newest_timestamp "${cs_dashboards}/cs-home/cs_dashboard.yaml" )
-        local code_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" "${cs_cache}/cs_service.txt" "${cs_lib}/cs_rules.csv" )
-        if [[ "$json_timestamp" -gt "$reg_timestamp" || "$reg_timestamp" -gt "$yaml_timestamp" || "$code_timestamp" -gt "$yaml_timestamp" ]]; then
+        local code_timestamp=$(lib_get_newest_timestamp "${cs_lib}/cs_update_casasmooth.sh" "${cs_path}/cs_update.sh" "${cs_lib}/cs_rules.csv" )
+        local cache_timestamp=$(lib_get_newest_timestamp "${cs_cache}/cs_service.txt" "${cs_lib}/cs_rules.csv" )
+        # Check which component is out of date and report it
+        if (( base_json_timestamp > reg_timestamp )); then
+            log "Base config is newer than cs_registry"
+            echo "true"
+        elif (( device_json_timestamp > reg_timestamp )); then
+            log "Device registry is newer than cs_registry"
+            echo "true"
+        elif (( entity_json_timestamp > reg_timestamp )); then
+            log "Entity registry is newer than cs_registry"
+            echo "true"
+        elif (( reg_timestamp > yaml_timestamp )); then
+            log "Registry data is newer than cs_dashboard"
+            echo "true"
+        elif (( code_timestamp > yaml_timestamp )); then
+            log "Code is newer than cs_dashboard"
+            echo "true"
+        elif (( cache_timestamp > yaml_timestamp )); then
+            log "Cache is newer than cs_dashboard"
             echo "true"
         else
             echo "false"
