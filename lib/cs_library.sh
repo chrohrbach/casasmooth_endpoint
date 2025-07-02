@@ -255,17 +255,17 @@
 
         # Check if the source exists and whether it is a directory or a file.
         if [[ -d "$src" ]]; then
-            # Source is a directory: copy recursively and preserve attributes.
-            if cp -a "$src" "$dest"; then
-                log_debug "Successfully copied directory '$src' to '$dest' (preserving attributes)."
+            # Source is a directory: copy recursively and preserve attributes, force overwrite if exists.
+            if cp -aT "$src" "$dest"; then
+                log_debug "Successfully copied directory '$src' to '$dest' (preserving attributes, overwriting if exists)."
             else
                 log_error "Failed to copy directory '$src' to '$dest'."
                 return 1
             fi
         elif [[ -f "$src" ]]; then
-            # Source is a file: perform a standard copy.
-            if cp -p "$src" "$dest"; then
-                log_debug "Successfully copied file '$src' to '$dest' (preserving attributes)."
+            # Source is a file: perform a standard copy, force overwrite if exists.
+            if cp -pf "$src" "$dest"; then
+                log_debug "Successfully copied file '$src' to '$dest' (preserving attributes, overwriting if exists)."
             else
                 log_error "Failed to copy file '$src' to '$dest'."
                 return 1
@@ -275,7 +275,7 @@
             log_warning "Source '$src' does not exist. Operation skipped."
             return 1
         fi
-        }
+    }
 
 #----- Function to URL-encode a string
     url_encode() {
