@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 2.2.2
+# Version: 2.2.3
 #
 # Efficient direct backup using BusyBox tar, no staging, backup from /config.
 # The backup tarball is named <guid>_<timestamp>.tar.gz, but always sent to the cloud as <guid>.tar.gz.
@@ -137,17 +137,21 @@ tar czf "${tar_filepath}" \
     --exclude='casasmooth/notebooks/sensors' \
     --exclude='casasmooth/medias' \
     --exclude='home-assistant_v2.*' \
-    --exclude='home-assistant_v2.*' \
     --exclude='home-assistant.log.*' \
     --exclude='.Trash*' \
     --exclude='backup.db*' \
     --exclude='frigate.db*' \
-    --exclude='www/community' \
-    --exclude='www/snapshots' \
+    --exclude='blueprints' \
     --exclude='custom_components' \
-    --exclude='tts' \
+    --exclude='deps' \
+    --exclude='image' \
     --exclude='model_cache' \
     --exclude='notebooks' \
+    --exclude='pyscripts' \
+    --exclude='python_scripts' \
+    --exclude='themes' \
+    --exclude='tts' \
+    --exclude='www' \
     .
 
 #----- Upload Tar Archive to Cloud (if enhanced)
