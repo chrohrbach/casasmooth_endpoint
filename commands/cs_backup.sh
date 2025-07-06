@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 2.2.3
+# Version: 2.2.4
 #
 # Efficient direct backup using BusyBox tar, no staging, backup from /config.
 # The backup tarball is named <guid>_<timestamp>.tar.gz, but always sent to the cloud as <guid>.tar.gz.
@@ -147,7 +147,7 @@ tar czf "${tar_filepath}" \
     --exclude='image' \
     --exclude='model_cache' \
     --exclude='notebooks' \
-    --exclude='pyscripts' \
+    --exclude='pyscript' \
     --exclude='python_scripts' \
     --exclude='themes' \
     --exclude='tts' \
