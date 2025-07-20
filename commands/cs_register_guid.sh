@@ -13,14 +13,21 @@
         exit 1
     fi
 #=================================== Include cs_registry
+if [[ -f "${cs_locals}/cs_registry_data.sh" ]]; then
     include_source "${cs_lib}/cs_registry.sh"
     include_source "${cs_locals}/cs_registry_data.sh"
+fi
 #===================================
 
-verbose=true
-debug=false
+# this script WILL have unbound variables, ignore them
+set -u
 
-email=${@:-}
+email="${@:-}"
+if [[ -z "$email" ]]; then
+    echo "Registering/updating system without an email. The GUID will NOT be associated with a user."
+else
+    echo "Registering/updating system with this associated email: $email."
+fi
 
 if command -v ha >/dev/null 2>&1; then
   on_ha=true
@@ -44,10 +51,12 @@ fi
 log "Collecting data..."
 
 trackers=""
-if [[ -t global_mobile_trackers && ${#global_mobile_trackers[@]} -gt 0 ]]; then
-    for tracker in "${global_mobile_trackers[@]}"; do
-        trackers="${trackers}${tracker};"
-    done
+if [[ -f "${cs_locals}/cs_registry_data.sh" ]]; then
+    if [[ -t global_mobile_trackers && ${#global_mobile_trackers[@]} -gt 0 ]]; then
+        for tracker in "${global_mobile_trackers[@]}"; do
+            trackers="${trackers}${tracker};"
+        done
+    fi
 fi
 
 # Get some information from the local state store
@@ -92,37 +101,39 @@ supervisor=$(ha info | grep "supervisor:" | awk '{print $2}')
 docker=$(ha info | grep "docker:" | awk '{print $2}')
 addons=$(ha addons list)
 
-# Count elements in each global array and assign directly to variables
-area_ids="${#global_area_ids[@]}"
-entity_ids="${#global_entity_ids[@]}"
-lights="${#global_lights[@]}"
-bulbs="${#global_bulbs[@]}"
-cameras="${#global_cameras[@]}"
-frigate_cameras="${#global_frigate_cameras[@]}"
-climates="${#global_climates[@]}"
-heaters="${#global_heaters[@]}"
-power_consumption_sensors="${#global_power_consumption_sensors[@]}"
-switches="${#global_switches[@]}"
-temperature_sensors="${#global_temperature_sensors[@]}"
-humidity_sensors="${#global_humidity_sensors[@]}"
-illuminance_sensors="${#global_illuminance_sensors[@]}"
-motion_sensors="${#global_motion_sensors[@]}"
-occupancy_sensors="${#global_occupancy_sensors[@]}"
-co2_sensors="${#global_co2_sensors[@]}"
-pm1_sensors="${#global_pm1_sensors[@]}"
-pm4_sensors="${#global_pm4_sensors[@]}"
-pm10_sensors="${#global_pm10_sensors[@]}"
-pm25_sensors="${#global_pm25_sensors[@]}"
-open_sensors="${#global_open_sensors[@]}"
-buttons="${#global_buttons[@]}"
-dimmers="${#global_dimmers[@]}"
+if [[ -f "${cs_locals}/cs_registry_data.sh" ]]; then
+    # Count elements in each global array and assign directly to variables
+    area_ids="${#global_area_ids[@]}"
+    entity_ids="${#global_entity_ids[@]}"
+    lights="${#global_lights[@]}"
+    bulbs="${#global_bulbs[@]}"
+    cameras="${#global_cameras[@]}"
+    frigate_cameras="${#global_frigate_cameras[@]}"
+    climates="${#global_climates[@]}"
+    heaters="${#global_heaters[@]}"
+    power_consumption_sensors="${#global_power_consumption_sensors[@]}"
+    switches="${#global_switches[@]}"
+    temperature_sensors="${#global_temperature_sensors[@]}"
+    humidity_sensors="${#global_humidity_sensors[@]}"
+    illuminance_sensors="${#global_illuminance_sensors[@]}"
+    motion_sensors="${#global_motion_sensors[@]}"
+    occupancy_sensors="${#global_occupancy_sensors[@]}"
+    co2_sensors="${#global_co2_sensors[@]}"
+    pm1_sensors="${#global_pm1_sensors[@]}"
+    pm4_sensors="${#global_pm4_sensors[@]}"
+    pm10_sensors="${#global_pm10_sensors[@]}"
+    pm25_sensors="${#global_pm25_sensors[@]}"
+    open_sensors="${#global_open_sensors[@]}"
+    buttons="${#global_buttons[@]}"
+    dimmers="${#global_dimmers[@]}"
 
-# Combined counts (without _count suffix)
-lights_and_bulbs=$((lights + bulbs))
-cameras_and_frigate=$((cameras + frigate_cameras))
-climates_and_heaters=$((climates + heaters))
-buttons_and_dimmers=$((buttons + dimmers))
-sensors=$((temperature_sensors + humidity_sensors + illuminance_sensors + motion_sensors + occupancy_sensors + co2_sensors + pm1_sensors + pm4_sensors + pm10_sensors + pm25_sensors + open_sensors))
+    # Combined counts (without _count suffix)
+    lights_and_bulbs=$((lights + bulbs))
+    cameras_and_frigate=$((cameras + frigate_cameras))
+    climates_and_heaters=$((climates + heaters))
+    buttons_and_dimmers=$((buttons + dimmers))
+    sensors=$((temperature_sensors + humidity_sensors + illuminance_sensors + motion_sensors + occupancy_sensors + co2_sensors + pm1_sensors + pm4_sensors + pm10_sensors + pm25_sensors + open_sensors))
+fi
 
 # Verify the mode we are running in, if there is no lib/cs_update_casasmooth.sh file its endpoint, if there is no internals/cs_services.json we are release mode, otherwise in development mode
 if [[ ! -f "${cs_path}/lib/cs_update_casasmooth.sh" ]]; then

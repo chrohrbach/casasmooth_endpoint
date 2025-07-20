@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.15
+# Version: 1.1.17.17
 #
 # Library function for casasmooth scripts
 #
@@ -89,7 +89,6 @@
     test_mode=false
     export test_mode
 
-    # Predefined log level prefixes
     declare -A LOG_PREFIX=(
         ["ERROR"]="[ERR]"
         ["DEBUG"]="[DEB]"
@@ -97,6 +96,14 @@
         ["WARNING"]="[WAR]"
         ["INFO"]="[INF]"
         ["TRACE"]="[TRA]"
+    )
+    declare -A COLOR_PREFIX=(
+        ["ERROR"]="\033[0;31m"
+        ["DEBUG"]="\033[1;34m"
+        ["SUCCESS"]="\033[0;32m"
+        ["WARNING"]="\033[0;33m"
+        ["INFO"]="\033[0;32m"
+        ["TRACE"]="\033[0m"
     )
 
     log_message() {
@@ -117,17 +124,18 @@
         local timestamp
         timestamp=$(printf "%(%d.%m.%Y %H:%M:%S)T" -1)
 
-        # Construct the log message (No Color)
-        local message="${script_name} ${LOG_PREFIX[$level]} ${timestamp} $*"
+        # Construct the log message (with color for stdout, no color for file)
+        local plain_message="${script_name} ${LOG_PREFIX[$level]} ${timestamp} $*"
+        local color_message="${script_name} ${COLOR_PREFIX[$level]}${LOG_PREFIX[$level]} ${timestamp} $*\033[0m"
 
-        # Log to file
+        # Log to file (no color codes)
         if [[ "$logger" == "true" ]]; then
-            printf "%s\n" "$message" >> "$log_file"
+            printf "%s\n" "$plain_message" >> "$log_file"
         fi
 
-        # Output to stdout
+        # Output to stdout (with color codes)
         if [[ "$verbose" == "true" ]]; then
-            printf "%s\n" "$message"
+            printf "%b\n" "$color_message"
         fi
     }
 
