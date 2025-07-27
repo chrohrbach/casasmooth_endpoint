@@ -396,11 +396,11 @@
     safe_copy "${cs_resources}" "${hass_path}/www/community"
 
     # Copy custom components
-    safe_copy "${cs_custom_components}" "${hass_path}"
+    safe_copy "${cs_custom_components}" "${hass_path}/custom_components"
 
     # Copy images
-    mkdir -p "${cs_path}/images"
-    safe_copy "${cs_path}/images" "${hass_path}/www"
+    mkdir -p "${cs_images}"
+    safe_copy "${cs_images}" "${hass_path}/www/images"
 
     # Copy sounds
     safe_copy "${cs_medias}" "/media"
