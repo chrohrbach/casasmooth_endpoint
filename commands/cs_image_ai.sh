@@ -888,7 +888,7 @@ execute_local_analysis() {
         
     elif [[ "$IMAGE_AI_PROVIDER" == "openai" ]]; then
         # Load OpenAI secrets
-        if ! OPENAI_API_KEY=$(extract_secret "OPENAI_API_KEY"); then
+        if ! OPENAI_API_KEY=$(extract_secret "OPENAI_API_KEY" "true"); then
             log_error "Failed to extract OPENAI_API_KEY secret"
             exit 1
         fi

@@ -198,6 +198,7 @@
         # Function to extract secrets using the extract_key function
         extract_secret() {
             local key="$1"
+            local decode="${2:-false}"
             local secrets_file="/config/casasmooth/lib/.cs_secrets.yaml"
             
             # Extract the value using extract_key
@@ -205,9 +206,33 @@
             value=$(extract_key "$secrets_file" "$key")
             local status=$?
 
-            # Return the value and status
+            # Stop if extraction failed
+            if [[ $status -ne 0 ]]; then
+                echo "$value"
+                return $status
+            }
+
+            # Optionally base64-decode the extracted value
+            if [[ "$decode" =~ ^(true|1|yes|y|decode|--decode|base64|b64)$ ]]; then
+                if command_exists base64; then
+                    local decoded
+                    if decoded=$(printf '%s' "$value" | base64 -d 2>/dev/null); then
+                        value="$decoded"
+                    else
+                        log_error "Failed to base64-decode secret '${key}'."
+                        echo ""
+                        return 1
+                    fi
+                else
+                    log_error "base64 command not found; cannot decode secret '${key}'."
+                    echo ""
+                    return 1
+                fi
+            fi
+
+            # Return the (possibly decoded) value and status
             echo "$value"
-            return $status
+            return 0
         }
 
     #----- Extract Paths 
