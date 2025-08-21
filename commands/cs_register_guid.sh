@@ -52,7 +52,7 @@ log "Collecting data..."
 
 trackers=""
 if [[ -f "${cs_locals}/cs_registry_data.sh" ]]; then
-    if [[ -t global_mobile_trackers && ${#global_mobile_trackers[@]} -gt 0 ]]; then
+    if [[ -v global_mobile_trackers && ${#global_mobile_trackers[@]} -gt 0 ]]; then
         for tracker in "${global_mobile_trackers[@]}"; do
             trackers="${trackers}${tracker};"
         done
@@ -103,29 +103,30 @@ addons=$(ha addons list)
 
 if [[ -f "${cs_locals}/cs_registry_data.sh" ]]; then
     # Count elements in each global array and assign directly to variables
-    area_ids="${#global_area_ids[@]}"
-    entity_ids="${#global_entity_ids[@]}"
-    lights="${#global_lights[@]}"
-    bulbs="${#global_bulbs[@]}"
-    cameras="${#global_cameras[@]}"
-    frigate_cameras="${#global_frigate_cameras[@]}"
-    climates="${#global_climates[@]}"
-    heaters="${#global_heaters[@]}"
-    power_consumption_sensors="${#global_power_consumption_sensors[@]}"
-    switches="${#global_switches[@]}"
-    temperature_sensors="${#global_temperature_sensors[@]}"
-    humidity_sensors="${#global_humidity_sensors[@]}"
-    illuminance_sensors="${#global_illuminance_sensors[@]}"
-    motion_sensors="${#global_motion_sensors[@]}"
-    occupancy_sensors="${#global_occupancy_sensors[@]}"
-    co2_sensors="${#global_co2_sensors[@]}"
-    pm1_sensors="${#global_pm1_sensors[@]}"
-    pm4_sensors="${#global_pm4_sensors[@]}"
-    pm10_sensors="${#global_pm10_sensors[@]}"
-    pm25_sensors="${#global_pm25_sensors[@]}"
-    open_sensors="${#global_open_sensors[@]}"
-    buttons="${#global_buttons[@]}"
-    dimmers="${#global_dimmers[@]}"
+    # Use -v test to avoid unbound variable errors with set -u
+    area_ids=$([[ -v global_area_ids ]] && echo "${#global_area_ids[@]}" || echo "0")
+    entity_ids=$([[ -v global_entity_ids ]] && echo "${#global_entity_ids[@]}" || echo "0")
+    lights=$([[ -v global_lights ]] && echo "${#global_lights[@]}" || echo "0")
+    bulbs=$([[ -v global_bulbs ]] && echo "${#global_bulbs[@]}" || echo "0")
+    cameras=$([[ -v global_cameras ]] && echo "${#global_cameras[@]}" || echo "0")
+    frigate_cameras=$([[ -v global_frigate_cameras ]] && echo "${#global_frigate_cameras[@]}" || echo "0")
+    climates=$([[ -v global_climates ]] && echo "${#global_climates[@]}" || echo "0")
+    heaters=$([[ -v global_heaters ]] && echo "${#global_heaters[@]}" || echo "0")
+    power_consumption_sensors=$([[ -v global_power_consumption_sensors ]] && echo "${#global_power_consumption_sensors[@]}" || echo "0")
+    switches=$([[ -v global_switches ]] && echo "${#global_switches[@]}" || echo "0")
+    temperature_sensors=$([[ -v global_temperature_sensors ]] && echo "${#global_temperature_sensors[@]}" || echo "0")
+    humidity_sensors=$([[ -v global_humidity_sensors ]] && echo "${#global_humidity_sensors[@]}" || echo "0")
+    illuminance_sensors=$([[ -v global_illuminance_sensors ]] && echo "${#global_illuminance_sensors[@]}" || echo "0")
+    motion_sensors=$([[ -v global_motion_sensors ]] && echo "${#global_motion_sensors[@]}" || echo "0")
+    occupancy_sensors=$([[ -v global_occupancy_sensors ]] && echo "${#global_occupancy_sensors[@]}" || echo "0")
+    co2_sensors=$([[ -v global_co2_sensors ]] && echo "${#global_co2_sensors[@]}" || echo "0")
+    pm1_sensors=$([[ -v global_pm1_sensors ]] && echo "${#global_pm1_sensors[@]}" || echo "0")
+    pm4_sensors=$([[ -v global_pm4_sensors ]] && echo "${#global_pm4_sensors[@]}" || echo "0")
+    pm10_sensors=$([[ -v global_pm10_sensors ]] && echo "${#global_pm10_sensors[@]}" || echo "0")
+    pm25_sensors=$([[ -v global_pm25_sensors ]] && echo "${#global_pm25_sensors[@]}" || echo "0")
+    open_sensors=$([[ -v global_open_sensors ]] && echo "${#global_open_sensors[@]}" || echo "0")
+    buttons=$([[ -v global_buttons ]] && echo "${#global_buttons[@]}" || echo "0")
+    dimmers=$([[ -v global_dimmers ]] && echo "${#global_dimmers[@]}" || echo "0")
 
     # Combined counts (without _count suffix)
     lights_and_bulbs=$((lights + bulbs))

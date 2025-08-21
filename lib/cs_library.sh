@@ -391,6 +391,12 @@
         local files=("$@")
         local newest_timestamp=0
 
+        # Safety check for empty array when set -u is active
+        if [[ -v files && ${#files[@]} -eq 0 ]]; then
+            echo "$newest_timestamp"
+            return
+        fi
+
         for file in "${files[@]}"; do
             if [ -f "$file" ]; then
                 file_timestamp=$(stat -c %Y "$file" 2>/dev/null)
