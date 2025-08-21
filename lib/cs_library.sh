@@ -76,6 +76,8 @@
     # Default settings
     force_reload=false
     export force_reload
+    force_reboot=false
+    export force_reboot
     reduced_update=false
     export reduced_update
     install_generated_code=true

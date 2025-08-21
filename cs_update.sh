@@ -105,6 +105,11 @@
                 forward_args+=("$1") 
                 shift
                 ;;
+            --reboot)
+                force_reboot=true
+                forward_args+=("$1") 
+                shift
+                ;;
             --reduce)
                 reduced_update=true
                 forward_args+=("$1") 
