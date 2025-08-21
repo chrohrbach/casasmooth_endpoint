@@ -2,7 +2,7 @@
 #
 # casasmooth - copyright by teleia 2024
 #
-# Version: 1.1.17.17
+# Version: 1.1.17.18
 #
 # Library function for casasmooth scripts
 #
@@ -210,7 +210,7 @@
             if [[ $status -ne 0 ]]; then
                 echo "$value"
                 return $status
-            }
+            fi
 
             # Optionally base64-decode the extracted value
             if [[ "$decode" =~ ^(true|1|yes|y|decode|--decode|base64|b64)$ ]]; then
